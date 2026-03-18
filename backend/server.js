@@ -23,13 +23,9 @@ const app    = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:5173",
-      "http://localhost:60763",
-      process.env.CLIENT_URL
-    ],
-    methods: ["GET", "POST"]
+    origin: true,
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -37,12 +33,7 @@ const io = new Server(server, {
 
 // 1. CORS — must be first
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:60763",   // your current port
-    process.env.CLIENT_URL
-  ],
+  origin: true,
   credentials: true
 }));
 
