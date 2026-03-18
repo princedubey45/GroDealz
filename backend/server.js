@@ -21,16 +21,10 @@ const { runDemandPrediction } = require('./ai/demandPrediction');
 
 const app    = express();
 const server = http.createServer(app);
-const io     = new Server(server, {
+const io = new Server(server, {
   cors: {
-    origin: function (origin, callback) {
-      if (!origin || origin.startsWith('http://localhost')) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ['GET', 'POST']
+    origin: "*",
+    methods: ["GET", "POST"]
   }
 });
 
@@ -38,13 +32,7 @@ const io     = new Server(server, {
 
 // 1. CORS — must be first
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || origin.startsWith('http://localhost')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: "*",
   credentials: true
 }));
 
@@ -101,12 +89,12 @@ cron.schedule('0 * * * *', async () => {
 
 // ─── DB + START ───────────────────────────────────────────────────────────────
 const PORT      = process.env.PORT      || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/grodeaz';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://princedubey01011_db_user:o03WjMGGiszgzh5e@cluster1.vdvzsvt.mongodb.net/?appName=Cluster1';
 
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB connected');
-    server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+    server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
   .catch(err => {
     console.error('❌ MongoDB connection error:', err);
