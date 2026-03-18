@@ -1,0 +1,75 @@
+/* src/pages/AIInsights.module.css */
+.page { display: flex; flex-direction: column; gap: 22px; }
+
+.header { display: flex; align-items: flex-start; justify-content: space-between; }
+.title {
+  font-family: var(--font-display);
+  font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px;
+}
+.subtitle { font-size: 13px; color: var(--text2); }
+.headerBadges { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+
+.statGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.statCard {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  display: flex; align-items: center; gap: 12px;
+  position: relative;
+}
+.statIcon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.statTitle { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.statValue { font-family: var(--font-display); font-size: 20px; font-weight: 800; line-height: 1.1; }
+.statSub   { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.trend { position: absolute; top: 12px; right: 12px; font-size: 11px; font-weight: 700; }
+.up   { color: var(--accent); }
+.down { color: var(--accent3); }
+
+.tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+.tab {
+  padding: 9px 16px; border-radius: 10px 10px 0 0;
+  font-size: 13px; font-weight: 600;
+  background: transparent; color: var(--text2);
+  border: 1px solid transparent;
+  transition: all 0.15s; cursor: pointer;
+  border-bottom: none;
+}
+.tab:hover     { color: var(--text); }
+.tabActive     { background: var(--card); color: var(--accent); border-color: var(--border); }
+
+.tabContent { display: flex; flex-direction: column; gap: 16px; }
+
+.chartCard {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+}
+.chartHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.chartTitle  { font-family: var(--font-display); font-size: 15px; font-weight: 700; }
+.chartDesc   { display: flex; gap: 6px; }
+
+.operationalCard {
+  background: rgba(74,222,128,0.05);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: var(--radius); padding: 16px;
+}
+.opTitle { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.opText  { font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+
+.trendGrid { display: flex; flex-direction: column; gap: 8px; }
+.trendItem {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 16px;
+}
+.trendRank { font-family: var(--font-display); font-size: 14px; font-weight: 800; color: var(--muted); width: 28px; }
+
+.conceptGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.conceptCard {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.conceptIcon  { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.conceptTitle { font-family: var(--font-display); font-size: 17px; font-weight: 800; }
+.conceptDesc  { font-size: 13px; color: var(--text2); }
+.conceptList  { padding-left: 16px; display: flex; flex-direction: column; gap: 4px; }
+.conceptList li { font-size: 12px; color: var(--text2); }
