@@ -6,7 +6,7 @@
   overflow: hidden;
 }
 
-/* ── SIDEBAR ── */
+/* â”€â”€ SIDEBAR â”€â”€ */
 .sidebar {
   width: 230px;
   flex-shrink: 0;
@@ -16,6 +16,8 @@
   flex-direction: column;
   padding-bottom: 16px;
   overflow-y: auto;
+  transition: transform 0.3s ease;
+  z-index: 200;
 }
 
 .logo {
@@ -50,9 +52,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
+  padding: 11px 12px;
   border-radius: 10px;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text2);
   transition: all 0.15s;
@@ -60,15 +62,15 @@
 }
 .navItem:hover { background: var(--card); color: var(--text); }
 .navItem.active { background: rgba(74,222,128,0.1); color: var(--accent); font-weight: 600; }
-.navIcon { font-size: 16px; width: 20px; text-align: center; }
+.navIcon { font-size: 18px; width: 22px; text-align: center; }
 .navBadge {
   margin-left: auto;
   background: var(--accent);
   color: var(--bg);
   font-size: 10px;
   font-weight: 800;
-  min-width: 18px;
-  height: 18px;
+  min-width: 20px;
+  height: 20px;
   padding: 0 5px;
   border-radius: 20px;
   display: flex;
@@ -119,26 +121,27 @@
   gap: 10px;
 }
 .avatar {
-  width: 32px; height: 32px;
+  width: 34px; height: 34px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent), #22c55e);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 13px; color: var(--bg);
+  font-weight: 800; font-size: 14px; color: var(--bg);
   flex-shrink: 0;
 }
 .userInfo { flex: 1; min-width: 0; }
-.userName { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.userName { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .userRole { font-size: 10px; color: var(--muted); text-transform: capitalize; }
 .logoutBtn {
   background: rgba(248,113,113,0.1);
   border: 1px solid rgba(248,113,113,0.2);
   color: var(--accent3);
   border-radius: 7px;
-  width: 28px; height: 28px;
+  width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
+  font-size: 15px;
   flex-shrink: 0;
   transition: all 0.15s;
+  cursor: pointer;
 }
 .logoutBtn:hover { background: rgba(248,113,113,0.2); }
 
@@ -150,7 +153,7 @@
 }
 .btnLogin {
   display: block; text-align: center;
-  padding: 9px; border-radius: 10px;
+  padding: 10px; border-radius: 10px;
   font-size: 13px; font-weight: 600;
   background: var(--card); border: 1px solid var(--border);
   color: var(--text2); transition: all 0.15s;
@@ -158,34 +161,49 @@
 .btnLogin:hover { border-color: var(--accent); color: var(--accent); }
 .btnRegister {
   display: block; text-align: center;
-  padding: 9px; border-radius: 10px;
+  padding: 10px; border-radius: 10px;
   font-size: 13px; font-weight: 700;
   background: var(--accent); color: var(--bg);
   transition: opacity 0.15s;
 }
 .btnRegister:hover { opacity: 0.88; }
 
-/* ── MAIN ── */
+/* â”€â”€ MAIN â”€â”€ */
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
-/* Topbar */
+/* â”€â”€ TOPBAR â”€â”€ */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
+  padding: 10px 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  gap: 16px;
+  gap: 10px;
 }
-.topbarLeft  { display: flex; align-items: center; gap: 12px; }
-.topbarRight { display: flex; align-items: center; gap: 10px; }
+.topbarLeft  { display: flex; align-items: center; gap: 10px; }
+.topbarRight { display: flex; align-items: center; gap: 8px; }
+
+/* Hamburger button â€” hidden on desktop */
+.menuBtn {
+  display: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  align-items: center; justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
 
 .liveIndicator {
   display: flex; align-items: center; gap: 6px;
@@ -201,7 +219,7 @@
   border-radius: 50%;
   background: currentColor;
 }
-.live .dot    { animation: pulse 1.5s infinite; box-shadow: 0 0 6px currentColor; }
+.live .dot { animation: pulse 1.5s infinite; box-shadow: 0 0 6px currentColor; }
 
 .locationTag {
   font-size: 12px;
@@ -210,6 +228,7 @@
   padding: 4px 10px;
   border-radius: 20px;
   border: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 .iconBtn {
@@ -222,6 +241,8 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 16px;
   transition: all 0.15s;
+  flex-shrink: 0;
+  cursor: pointer;
 }
 .iconBtn:hover { border-color: var(--border2); color: var(--text); }
 
@@ -278,18 +299,91 @@
   background: var(--accent);
   color: var(--bg);
   border-radius: 10px;
-  padding: 8px 14px;
-  font-size: 13px;
+  padding: 8px 12px;
+  font-size: 12px;
   font-weight: 700;
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 5px;
   transition: all 0.15s;
+  white-space: nowrap;
+  cursor: pointer;
 }
 .chatBtn:hover      { opacity: 0.88; }
 .chatBtnActive      { background: var(--accent-dim); color: var(--accent); }
+
+/* Overlay behind sidebar on mobile */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 150;
+  backdrop-filter: blur(2px);
+}
+.overlayVisible { display: block; }
 
 /* Page content */
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 20px 16px;
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   MOBILE RESPONSIVE â€” max-width: 768px
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 768px) {
+
+  .app { position: relative; }
+
+  /* Sidebar slides in from left, hidden by default */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    width: 260px;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
+
+  /* When open */
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  /* Show hamburger on mobile */
+  .menuBtn {
+    display: flex;
+  }
+
+  /* Hide location tag on small screens */
+  .locationTag {
+    display: none;
+  }
+
+  /* Smaller chat button text */
+  .chatBtn {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  /* Padding for content */
+  .content {
+    padding: 16px 12px;
+  }
+
+  /* Notification dropdown full width on mobile */
+  .notifDropdown {
+    width: 260px;
+    right: -60px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .chatBtn span:last-child {
+    display: none;
+  }
+  .chatBtn::after {
+    content: 'ðŸ’¬';
+  }
 }
