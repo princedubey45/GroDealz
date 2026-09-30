@@ -95,8 +95,11 @@ const PORT      = process.env.PORT      || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://princedubey01011_db_user:o03WjMGGiszgzh5e@cluster1.vdvzsvt.mongodb.net/grodeaz?retryWrites=true&w=majority&appName=Cluster1';
 
 const connectWithRetry = () => {
-  console.log('Connecting to MongoDB...');
-  mongoose.connect(MONGO_URI)
+  console.log('Connecting to MongoDB (URI:', MONGO_URI.replace(/:([^@]+)@/, ':****@'), ')...');
+  mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 5000,
+    family: 4
+  })
     .then(() => {
       console.log('✅ MongoDB connected successfully');
     })
