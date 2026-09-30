@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import api from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import FreshnessBadge from '../features/freshness/FreshnessBadge';
 import styles from './Home.module.css';
 
 function ProductCard({ product, onAdd }) {
@@ -30,6 +31,12 @@ function ProductCard({ product, onAdd }) {
                product._recommendType === 'content-based' ? 'Based on taste' : 'Popular'}
         </div>
       )}
+      <div style={{ marginBottom: 10 }}>
+        <FreshnessBadge 
+          status={product.freshnessState || 'Very Fresh'} 
+          reason={product.freshnessReason || "Harvested recently and verified"} 
+        />
+      </div>
       <button className={styles.addBtn} onClick={() => onAdd(product)}>+ Add</button>
     </div>
   );
