@@ -64,11 +64,11 @@ export default function Cart() {
     } finally { setPlacing(false); }
   };
 
-  const card = { background:'var(--card, #1e293b)', border:'1px solid var(--border, #334155)', borderRadius:14, padding:18, marginBottom:12 };
+  const card = { background:'var(--card, #1e293b)', border:'1px solid var(--border, #334155)', borderRadius:14, padding:18, marginBottom:12, color:'var(--text, #fff)' };
   const delivery = 30;
 
-  if (!items.length) return (
-    <div style={{ textAlign:'center', padding:'80px 0' }}>
+  if (!items?.length) return (
+    <div style={{ textAlign:'center', padding:'80px 0', color:'var(--text, #fff)' }}>
       <div style={{ fontSize:64, marginBottom:16 }}>🛒</div>
       <div style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, marginBottom:8 }}>Your cart is empty</div>
       <p style={{ color:'var(--muted)', marginBottom:20 }}>Add items manually or generate a plan with AI</p>
@@ -80,10 +80,10 @@ export default function Cart() {
   );
 
   return (
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', gap:20, alignItems:'start' }}>
+    <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', gap:20, alignItems:'start', color:'var(--text, #fff)' }}>
       {/* Items List & Basket Completion */}
       <div>
-        <div style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, marginBottom:18 }}>🛒 Your Cart ({items.length} items)</div>
+        <div style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, marginBottom:18 }}>🛒 Your Cart ({items?.length || 0} items)</div>
         {items.map(item => (
           <div key={item._id} style={{ ...card, display:'flex', alignItems:'center', gap:14 }}>
             <div style={{ fontSize:40, width:56, textAlign:'center' }}>{item.emoji || '🛒'}</div>
