@@ -1,12 +1,12 @@
 // src/hooks/useApi.js
 import axios from 'axios';
 
+const API_BASE = (process.env.REACT_APP_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
 const api = axios.create({
-  baseURL: (process.env.REACT_APP_API_URL + '/api'),
- 
+  baseURL: API_BASE.endsWith('/api') ? API_BASE : `${API_BASE}/api`,
   timeout: 15000,
 });
-console.log("API URL:", process.env.REACT_APP_API_URL);
+console.log("API URL Base:", API_BASE);
 // Attach JWT on every request
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('grd_token');
