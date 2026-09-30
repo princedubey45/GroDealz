@@ -1,11 +1,11 @@
 // src/pages/AIGroceryPlanner.js
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
-import useApi from '../hooks/useApi';
+import api from '../hooks/useApi';
 import styles from './AIGroceryPlanner.module.css';
 
 export default function AIGroceryPlanner() {
-  const api = useApi();
+
   const { addBasket } = useCart();
 
   const [query, setQuery] = useState('Plan groceries for 4 people under ₹1000 for 3 days');

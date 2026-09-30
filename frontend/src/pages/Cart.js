@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import useApi from '../hooks/useApi';
+import api from '../hooks/useApi';
 
 export default function Cart() {
-  const api = useApi();
+
   const { items, addItem, addBasket, replaceCart, removeItem, updateQty, total, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();

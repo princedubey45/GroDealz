@@ -1,6 +1,6 @@
 // src/components/Chatbot.js
 import React, { useState, useRef, useEffect } from 'react';
-import useApi from '../hooks/useApi';
+import api from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -20,7 +20,7 @@ function MarkdownText({ text }) {
 }
 
 export default function Chatbot({ onClose }) {
-  const api = useApi();
+
   const { user } = useAuth();
   const { addBasket } = useCart();
 
