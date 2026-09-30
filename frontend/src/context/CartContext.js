@@ -22,6 +22,48 @@ export function CartProvider({ children }) {
     });
   };
 
+  const addBasket = (basketItems = []) => {
+    setItems(prev => {
+      let updated = [...prev];
+      for (const item of basketItems) {
+        const prodId = item._id || item.productId || item.product;
+        const existingIdx = updated.findIndex(i => i._id === prodId);
+        const qtyToAdd = item.quantity || item.qty || 1;
+
+        if (existingIdx > -1) {
+          updated[existingIdx] = {
+            ...updated[existingIdx],
+            qty: updated[existingIdx].qty + qtyToAdd
+          };
+        } else {
+          updated.push({
+            _id: prodId,
+            name: item.name,
+            price: item.price,
+            mrp: item.mrp || item.price,
+            unit: item.unit,
+            emoji: item.emoji || '🛒',
+            qty: qtyToAdd
+          });
+        }
+      }
+      return updated;
+    });
+  };
+
+  const replaceCart = (basketItems = []) => {
+    const formatted = basketItems.map(item => ({
+      _id: item._id || item.productId || item.product,
+      name: item.name,
+      price: item.price,
+      mrp: item.mrp || item.price,
+      unit: item.unit,
+      emoji: item.emoji || '🛒',
+      qty: item.quantity || item.qty || 1
+    }));
+    setItems(formatted);
+  };
+
   const removeItem = (id) => setItems(prev => prev.filter(i => i._id !== id));
 
   const updateQty = (id, qty) => {
@@ -35,7 +77,7 @@ export function CartProvider({ children }) {
   const itemCount = items.reduce((s, i) => s + i.qty, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQty, clearCart, total, itemCount }}>
+    <CartContext.Provider value={{ items, addItem, addBasket, replaceCart, removeItem, updateQty, clearCart, total, itemCount }}>
       {children}
     </CartContext.Provider>
   );

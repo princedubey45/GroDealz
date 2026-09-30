@@ -16,6 +16,7 @@ const recommendationRoutes  = require('./routes/recommendations');
 const chatbotRoutes         = require('./routes/chatbot');
 const storeRoutes           = require('./routes/stores');
 const demandRoutes          = require('./routes/demand');
+const aiRoutes              = require('./routes/ai');
 
 const { runDemandPrediction } = require('./ai/demandPrediction');
 
@@ -59,6 +60,7 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/chatbot',         chatbotRoutes);
 app.use('/api/stores',          storeRoutes);
 app.use('/api/demand',          demandRoutes);
+app.use('/api/ai',              aiRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 

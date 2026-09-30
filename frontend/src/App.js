@@ -19,6 +19,7 @@ const Login         = lazy(() => import('./pages/Login'));
 const Register      = lazy(() => import('./pages/Register'));
 const AIInsights    = lazy(() => import('./pages/AIInsights'));
 const StoreFinder   = lazy(() => import('./pages/StoreFinder'));
+const AIGroceryPlanner = lazy(() => import('./pages/AIGroceryPlanner'));
 
 const Loader = () => (
   <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',flexDirection:'column',gap:16 }}>
@@ -48,6 +49,7 @@ function App() {
                 <Route element={<Layout />}>
                   <Route path="/"         element={<Home />} />
                   <Route path="/products" element={<Products />} />
+                  <Route path="/ai-planner" element={<AIGroceryPlanner />} />
                   <Route path="/stores"   element={<StoreFinder />} />
                   <Route path="/cart"     element={<PrivateRoute><Cart /></PrivateRoute>} />
                   <Route path="/orders"   element={<PrivateRoute><Orders /></PrivateRoute>} />

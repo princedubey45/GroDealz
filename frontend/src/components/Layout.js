@@ -10,12 +10,13 @@ import styles        from './Layout.module.css';
 const NAV = [
   { to: '/',                icon: '⚡', label: 'Home',          public: true },
   { to: '/products',        icon: '🛒', label: 'Shop',          public: true },
+  { to: '/ai-planner',      icon: '🤖', label: 'AI Copilot',     public: true },
   { to: '/stores',          icon: '🗺️', label: 'Stores',        public: true },
   { to: '/cart',            icon: '🧺', label: 'Cart',          public: false },
   { to: '/orders',          icon: '📦', label: 'Orders',        public: false },
   { to: '/dashboard',       icon: '📊', label: 'Dashboard',     owner: true },
   { to: '/manage-products', icon: '➕', label: 'Add Products',  owner: true },
-  { to: '/ai-insights',     icon: '🤖', label: 'AI Insights',   owner: true },
+  { to: '/ai-insights',     icon: '📈', label: 'AI Insights',   owner: true },
 ];
 
 export default function Layout() {
