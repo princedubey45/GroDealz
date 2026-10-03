@@ -46,7 +46,10 @@ const orderSchema = new mongoose.Schema({
   payment: {
     method: { type: String, enum: ['cod','online','wallet'], default: 'cod' },
     status: { type: String, enum: ['pending','paid','failed','refunded'], default: 'pending' },
-    transactionId: String
+    transactionId: String,
+    razorpayOrderId: String,
+    razorpayPaymentId: String,
+    razorpayRefundId: String
   },
 
   // AI fields

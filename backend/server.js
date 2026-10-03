@@ -18,6 +18,7 @@ const storeRoutes           = require('./routes/stores');
 const demandRoutes          = require('./routes/demand');
 const aiRoutes              = require('./routes/ai');
 const ticketRoutes          = require('./routes/tickets');
+const paymentRoutes         = require('./routes/payment');
 
 const { runDemandPrediction } = require('./ai/demandPrediction');
 
@@ -63,6 +64,7 @@ app.use('/api/stores',          storeRoutes);
 app.use('/api/demand',          demandRoutes);
 app.use('/api/ai',              aiRoutes);
 app.use('/api/tickets',         ticketRoutes);
+app.use('/api/payment',         paymentRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 

@@ -23,7 +23,53 @@ export default function OrderDetail() {
     api.get(`/orders/${id}`)
       .then(r => { setOrder(r.data); trackOrder(r.data._id); })
       .finally(() => setLoading(false));
+
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
   }, [id]);
+
+  const handleRetryPayment = async () => {
+    try {
+      const rzpRes = await api.post('/payment/create-order', { orderId: order._id });
+      const { id: rzpOrderId, amount, currency, key } = rzpRes.data;
+
+      const options = {
+        key: key,
+        amount: amount,
+        currency: currency,
+        name: "GroDealz",
+        description: "Retry Payment",
+        order_id: rzpOrderId,
+        handler: async function (response) {
+          try {
+            const verifyRes = await api.post('/payment/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: order._id
+            });
+            if (verifyRes.data.success) {
+              setOrder({ ...order, payment: { ...order.payment, status: 'paid' } });
+              alert('Payment Successful!');
+            }
+          } catch (err) {
+            alert('Payment Verification Failed!');
+          }
+        },
+        theme: { color: "#10b981" }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+         alert('Payment failed!');
+      });
+      rzp.open();
+    } catch (err) {
+      alert('Error initiating payment');
+    }
+  };
 
   if (loading) return <div className="skeleton" style={{ height: 400, borderRadius: 18 }} />;
   if (!order)  return <div style={{ textAlign:'center', padding:60, color:'var(--muted)' }}>Order not found</div>;
@@ -99,7 +145,20 @@ export default function OrderDetail() {
         <div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:15, marginBottom:12 }}>📦 Delivery Details</div>
         <div style={{ fontSize:13, color:'var(--text2)', display:'flex', flexDirection:'column', gap:8 }}>
           <div>📍 <strong>Address:</strong> {order.delivery?.address}</div>
-          <div>💳 <strong>Payment:</strong> {order.payment?.method?.toUpperCase()} – {order.payment?.status}</div>
+          <div>
+            💳 <strong>Payment:</strong> {order.payment?.method?.toUpperCase()} – 
+            <span style={{ color: order.payment?.status === 'paid' ? 'var(--accent)' : order.payment?.status === 'failed' ? 'red' : 'orange', marginLeft: 4 }}>
+              {order.payment?.status?.toUpperCase()}
+            </span>
+            {order.payment?.method === 'online' && (order.payment?.status === 'pending' || order.payment?.status === 'failed') && (
+              <button 
+                onClick={handleRetryPayment}
+                style={{ marginLeft: 12, background:'var(--accent)', border:'none', color:'#fff', padding:'4px 10px', borderRadius:6, cursor:'pointer', fontSize: 11, fontWeight: 'bold' }}
+              >
+                Retry Payment
+              </button>
+            )}
+          </div>
           {order.delivery?.riderName && <div>🛵 <strong>Rider:</strong> {order.delivery.riderName}</div>}
         </div>
       </div>

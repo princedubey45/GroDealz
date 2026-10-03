@@ -4,9 +4,12 @@ const crmService = require('../services/crmService');
 
 // Stub for AI processing
 const analyzeMessageWithAI = async (messageText, issueType) => {
-  // Dummy logic: if message contains 'stolen' or 'payment', escalate
-  if (messageText.toLowerCase().includes('payment') || messageText.toLowerCase().includes('stolen')) {
-    return { response: "I'll connect you with a human agent for this sensitive issue.", confidence: 0.3 };
+  // If the message contains payment-sensitive keywords, escalate to human agent immediately
+  const sensitiveKeywords = ['payment', 'stolen', 'double charge', 'charged twice', 'refund', 'card', 'upi', 'fraud'];
+  const isSensitive = sensitiveKeywords.some(keyword => messageText.toLowerCase().includes(keyword));
+
+  if (isSensitive) {
+    return { response: "I see this is a sensitive payment or refund issue. I will escalate this to a human agent immediately to ensure your data is secure.", confidence: 0.3 };
   }
   return { response: "Thank you for reaching out. We are looking into your " + issueType + " issue.", confidence: 0.9 };
 };

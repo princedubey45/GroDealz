@@ -18,6 +18,14 @@ export default function Cart() {
   const [targetBudget, setTargetBudget] = useState(500);
   const [optimizing, setOptimizing] = useState(false);
   const [optMessage, setOptMessage] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cod');
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
 
   useEffect(() => {
     if (items.length > 0) {
@@ -51,14 +59,60 @@ export default function Cart() {
     setPlacing(true);
     try {
       const storeId = items[0].store || '000000000000000000000001';
-      await api.post('/orders', {
+      const orderRes = await api.post('/orders', {
         items: items.map(i => ({ productId: i._id, quantity: i.qty })),
         storeId,
         deliveryAddress: address,
-        paymentMethod: 'cod'
+        paymentMethod
       });
-      clearCart();
-      navigate('/orders');
+      
+      const groDealzOrder = orderRes.data;
+
+      if (paymentMethod === 'online') {
+        const rzpRes = await api.post('/payment/create-order', { orderId: groDealzOrder._id });
+        const { id, amount, currency, key } = rzpRes.data;
+
+        const options = {
+          key: key,
+          amount: amount,
+          currency: currency,
+          name: "GroDealz",
+          description: "Grocery Order",
+          order_id: id,
+          handler: async function (response) {
+            try {
+              const verifyRes = await api.post('/payment/verify', {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: groDealzOrder._id
+              });
+              if (verifyRes.data.success) {
+                clearCart();
+                navigate('/orders');
+              }
+            } catch (err) {
+              alert('Payment Verification Failed!');
+              navigate('/orders'); // still navigate so they can see pending order
+            }
+          },
+          prefill: {
+            name: user?.name,
+            email: user?.email,
+          },
+          theme: { color: "#10b981" }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response){
+           alert('Payment failed!');
+           navigate('/orders');
+        });
+        rzp.open();
+      } else {
+        clearCart();
+        navigate('/orders');
+      }
     } catch (err) {
       alert(err.response?.data?.message || 'Order failed');
     } finally { setPlacing(false); }
@@ -171,6 +225,17 @@ export default function Cart() {
               <span>{l}</span><span>{v}</span>
             </div>
           ))}
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize:12, color:'var(--muted)', display:'block', marginBottom:6 }}>Payment Method</label>
+            <select
+              style={{ background:'var(--card2, #334155)', border:'1px solid var(--border, #334155)', borderRadius:9, padding:'9px 13px', fontSize:13, color:'var(--text)', width:'100%' }}
+              value={paymentMethod}
+              onChange={e => setPaymentMethod(e.target.value)}
+            >
+              <option value="cod">Cash on Delivery</option>
+              <option value="online">Online Payment (Razorpay)</option>
+            </select>
+          </div>
           <div style={{ borderTop:'1px solid var(--border, #334155)', paddingTop:12, display:'flex', justifyContent:'space-between', fontFamily:'var(--font-display)', fontSize:18, fontWeight:800, marginBottom:16 }}>
             <span>Total</span><span style={{ color:'#10b981' }}>₹{total + delivery}</span>
           </div>
@@ -180,7 +245,7 @@ export default function Cart() {
           <button
             style={{ width:'100%', background:'#10b981', color:'#fff', border:'none', borderRadius:10, padding:13, fontSize:15, fontWeight:800, cursor:'pointer', opacity: placing ? 0.6 : 1, fontFamily:'var(--font-display)' }}
             onClick={placeOrder} disabled={placing}
-          >{placing ? 'Placing order…' : '🚀 Place Order (COD)'}</button>
+          >{placing ? 'Processing…' : (paymentMethod === 'online' ? '💳 Pay Now' : '🚀 Place Order (COD)')}</button>
         </div>
       </div>
     </div>
