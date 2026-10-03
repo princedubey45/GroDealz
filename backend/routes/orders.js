@@ -81,16 +81,30 @@ router.get('/:id', auth, async (req, res) => {
 // Update order status (owner)
 router.patch('/:id/status', auth, ownerOnly, async (req, res) => {
   try {
-    const { status, note } = req.body;
+    const { status, note, riderName, riderPhone, estimatedTime } = req.body;
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
-    order.status = status;
-    order.statusHistory.push({ status, note });
+    if (status) {
+      order.status = status;
+      order.statusHistory.push({ status, note });
+    }
+    
+    if (riderName) order.delivery.riderName = riderName;
+    if (riderPhone) order.delivery.riderPhone = riderPhone;
+    if (estimatedTime) order.delivery.estimatedTime = estimatedTime;
+
     await order.save();
 
     if (global.io) {
-      global.io.to(`order_${order._id}`).emit('order_update', { status, orderId: order.orderId, note });
+      global.io.to(`order_${order._id}`).emit('order_update', { 
+        status: order.status, 
+        orderId: order.orderId, 
+        note,
+        riderName: order.delivery.riderName,
+        riderPhone: order.delivery.riderPhone,
+        estimatedTime: order.delivery.estimatedTime
+      });
     }
     res.json(order);
   } catch (err) { res.status(500).json({ message: err.message }); }

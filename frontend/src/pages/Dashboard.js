@@ -94,6 +94,7 @@ export default function Dashboard() {
   const [myStore,        setMyStore]        = useState(null);
   const [demand,         setDemand]         = useState(null);
   const [stats,          setStats]          = useState({ orders:0, revenue:0, active:0, stores: NEARBY_STORES.length + 1 });
+  const [editingOrder,   setEditingOrder]   = useState(null);
 
   const storeId = user?.storeId;
 
@@ -128,6 +129,26 @@ export default function Dashboard() {
       const el = document.getElementById(`offer-${store.id}`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
+  };
+
+  const updateOrderStatus = async (e) => {
+    e.preventDefault();
+    try {
+      const { _id, newStatus, riderName, riderPhone, estimatedTime } = editingOrder;
+      await api.patch(`/orders/${_id}/status`, { 
+        status: newStatus,
+        riderName,
+        riderPhone,
+        estimatedTime,
+        note: `Status updated to ${newStatus}`
+      });
+      // refresh orders
+      setOrders(prev => prev.map(o => o._id === _id ? { ...o, status: newStatus, delivery: { ...o.delivery, riderName, riderPhone, estimatedTime } } : o));
+      setEditingOrder(null);
+      alert('Order updated successfully!');
+    } catch (err) {
+      alert('Failed to update order');
+    }
   };
 
   const filteredOrders  = orderFilter === 'all' ? nearbyOrders : nearbyOrders.filter(o => o.status === orderFilter);
@@ -345,8 +366,8 @@ export default function Dashboard() {
                   <tr>{['Order','Customer','Total','Status'].map(h => <th key={h}>{h}</th>)}</tr>
                 </thead>
                 <tbody>
-                  {orders.slice(0,8).map(o => (
-                    <tr key={o._id}>
+                  {orders.slice(0,20).map(o => (
+                    <tr key={o._id} onClick={() => setEditingOrder({ ...o, newStatus: o.status, riderName: o.delivery?.riderName || '', riderPhone: o.delivery?.riderPhone || '', estimatedTime: o.delivery?.estimatedTime || 30 })} style={{ cursor: 'pointer' }}>
                       <td style={{ fontWeight:700, color:'var(--accent)', fontSize:11 }}>{o.orderId}</td>
                       <td style={{ color:'var(--text2)' }}>{o.customer?.name || '—'}</td>
                       <td style={{ fontWeight:700, color:'#fbbf24' }}>₹{o.pricing?.total}</td>
@@ -373,6 +394,63 @@ export default function Dashboard() {
               {n.type==='new_order' ? `New order! ${n.itemCount} items · ₹${n.total}` : `Order ${n.orderId} → ${n.status}`}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* EDIT ORDER MODAL */}
+      {editingOrder && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'var(--card)', padding: 24, borderRadius: 12, width: 400, border: '1px solid var(--border)' }}>
+            <h2 style={{ marginTop: 0 }}>Update Order {editingOrder.orderId}</h2>
+            <form onSubmit={updateOrderStatus} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 12 }}>Status</label>
+                <select 
+                  value={editingOrder.newStatus} 
+                  onChange={e => setEditingOrder({...editingOrder, newStatus: e.target.value})}
+                  style={{ width: '100%', padding: 8, borderRadius: 6, background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+                >
+                  <option value="placed">Placed</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="preparing">Preparing</option>
+                  <option value="out_for_delivery">Out for Delivery</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 12 }}>Rider Name (optional)</label>
+                <input 
+                  type="text" 
+                  value={editingOrder.riderName} 
+                  onChange={e => setEditingOrder({...editingOrder, riderName: e.target.value})}
+                  style={{ width: '100%', padding: 8, borderRadius: 6, background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 12 }}>Rider Phone (optional)</label>
+                <input 
+                  type="text" 
+                  value={editingOrder.riderPhone} 
+                  onChange={e => setEditingOrder({...editingOrder, riderPhone: e.target.value})}
+                  style={{ width: '100%', padding: 8, borderRadius: 6, background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 12 }}>ETA (minutes)</label>
+                <input 
+                  type="number" 
+                  value={editingOrder.estimatedTime} 
+                  onChange={e => setEditingOrder({...editingOrder, estimatedTime: e.target.value})}
+                  style={{ width: '100%', padding: 8, borderRadius: 6, background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                <button type="submit" style={{ flex: 1, background: 'var(--accent)', color: '#000', border: 'none', padding: 10, borderRadius: 6, fontWeight: 'bold', cursor: 'pointer' }}>Save Changes</button>
+                <button type="button" onClick={() => setEditingOrder(null)} style={{ flex: 1, background: 'var(--card2)', color: 'var(--text)', border: '1px solid var(--border)', padding: 10, borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
