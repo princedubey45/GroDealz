@@ -17,6 +17,7 @@ const chatbotRoutes         = require('./routes/chatbot');
 const storeRoutes           = require('./routes/stores');
 const demandRoutes          = require('./routes/demand');
 const aiRoutes              = require('./routes/ai');
+const ticketRoutes          = require('./routes/tickets');
 
 const { runDemandPrediction } = require('./ai/demandPrediction');
 
@@ -61,6 +62,7 @@ app.use('/api/chatbot',         chatbotRoutes);
 app.use('/api/stores',          storeRoutes);
 app.use('/api/demand',          demandRoutes);
 app.use('/api/ai',              aiRoutes);
+app.use('/api/tickets',         ticketRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
@@ -75,6 +77,27 @@ io.on('connection', (socket) => {
 
   socket.on('join_store', (storeId) => {
     socket.join(`store_${storeId}`);
+  });
+
+  socket.on('join_ticket', (ticketId) => {
+    socket.join(`ticket_${ticketId}`);
+    console.log(`🎫 Client joined ticket chat: ${ticketId}`);
+  });
+
+  socket.on('send_message', async (data) => {
+    const { ticketId, text, sender } = data;
+    // Broadcast the message to all users in the ticket room
+    io.to(`ticket_${ticketId}`).emit('receive_message', { ticketId, text, sender, createdAt: new Date() });
+    
+    // In a real scenario, this is where you'd save it to the DB if not already saved via REST,
+    // or you just emit and let the client know it arrived.
+    const Message = require('./models/Message');
+    try {
+      const newMsg = new Message({ ticket: ticketId, sender, text });
+      await newMsg.save();
+    } catch (e) {
+      console.error('Error saving socket message', e);
+    }
   });
 
   socket.on('disconnect', () => console.log('🔌 Client disconnected:', socket.id));
