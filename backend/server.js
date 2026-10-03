@@ -48,6 +48,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // 4. Rate limiting
+app.set('trust proxy', 1); // Trust first proxy (Render) to fix ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200 });
 app.use(limiter);
 
