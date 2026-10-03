@@ -11,3 +11,9 @@ services:
         value: mongodb+srv://princedubey01011_db_user:o03WjMGGiszgzh5e@cluster1.vdvzsvt.mongodb.net/grodeaz?retryWrites=true&w=majority&appName=Cluster1
       - key: JWT_SECRET
         value: grodeaz_super_secret_key_2024
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_xxxxxxxxx
+      - key: RAZORPAY_KEY_SECRET
+        value: xxxxxxxxxxxxxxxx
+      - key: RAZORPAY_WEBHOOK_SECRET
+        value: xxxxxxxxxxxxxxxx
