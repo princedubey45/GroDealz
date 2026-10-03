@@ -2,17 +2,7 @@ const Ticket = require('../models/Ticket');
 const Message = require('../models/Message');
 const crmService = require('../services/crmService');
 
-// Stub for AI processing
-const analyzeMessageWithAI = async (messageText, issueType) => {
-  // If the message contains payment-sensitive keywords, escalate to human agent immediately
-  const sensitiveKeywords = ['payment', 'stolen', 'double charge', 'charged twice', 'refund', 'card', 'upi', 'fraud'];
-  const isSensitive = sensitiveKeywords.some(keyword => messageText.toLowerCase().includes(keyword));
-
-  if (isSensitive) {
-    return { response: "I see this is a sensitive payment or refund issue. I will escalate this to a human agent immediately to ensure your data is secure.", confidence: 0.3 };
-  }
-  return { response: "Thank you for reaching out. We are looking into your " + issueType + " issue.", confidence: 0.9 };
-};
+const aiSupportService = require('../services/aiSupportService');
 
 exports.createTicket = async (req, res) => {
   try {
@@ -40,14 +30,23 @@ exports.createTicket = async (req, res) => {
     ticket.crmTicketId = crmRes.crmId;
     await ticket.save();
 
-    // AI auto-reply
-    const aiAnalysis = await analyzeMessageWithAI(initialMessage, issueType);
+    // AI Support Pipeline: Intent -> Context -> Tool Calling -> Resolution/Escalation
+    const aiAnalysis = await aiSupportService.processCustomerMessage(initialMessage, req.user ? req.user._id : null);
+    
     let newStatus = ticket.status;
     
-    if (aiAnalysis.confidence < 0.6) {
+    if (aiAnalysis.requiresHuman) {
       newStatus = 'Escalated';
       ticket.status = newStatus;
       ticket.aiConfidence = aiAnalysis.confidence;
+      ticket.intent = aiAnalysis.intent;
+      await ticket.save();
+    } else {
+      // Auto-resolved
+      newStatus = 'Resolved';
+      ticket.status = newStatus;
+      ticket.aiConfidence = aiAnalysis.confidence;
+      ticket.intent = aiAnalysis.intent;
       await ticket.save();
     }
 
