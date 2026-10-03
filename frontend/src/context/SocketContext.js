@@ -6,30 +6,30 @@ const SocketContext = createContext(null);
 export const useSocket = () => useContext(SocketContext);
 
 export function SocketProvider({ children }) {
-  const socketRef  = useRef(null);
+  const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    const socket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:5000', {
+    const newSocket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:5000', {
       autoConnect: true,
       reconnection: true,
       reconnectionDelay: 1000,
     });
 
-    socket.on('connect',    () => setConnected(true));
-    socket.on('disconnect', () => setConnected(false));
+    newSocket.on('connect',    () => setConnected(true));
+    newSocket.on('disconnect', () => setConnected(false));
 
-    socket.on('order_update', (data) => {
+    newSocket.on('order_update', (data) => {
       addNotification({ type: 'order', ...data });
     });
 
-    socket.on('new_order', (data) => {
+    newSocket.on('new_order', (data) => {
       addNotification({ type: 'new_order', ...data });
     });
 
-    socketRef.current = socket;
-    return () => socket.disconnect();
+    setSocket(newSocket);
+    return () => newSocket.disconnect();
   }, []);
 
   const addNotification = (notif) => {
@@ -37,11 +37,11 @@ export function SocketProvider({ children }) {
   };
 
   const trackOrder = (orderId) => {
-    socketRef.current?.emit('track_order', orderId);
+    socket?.emit('track_order', orderId);
   };
 
   const joinStore = (storeId) => {
-    socketRef.current?.emit('join_store', storeId);
+    socket?.emit('join_store', storeId);
   };
 
   const markRead = (id) => {
@@ -51,7 +51,7 @@ export function SocketProvider({ children }) {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <SocketContext.Provider value={{ connected, notifications, unreadCount, trackOrder, joinStore, markRead }}>
+    <SocketContext.Provider value={{ socket, connected, notifications, unreadCount, trackOrder, joinStore, markRead }}>
       {children}
     </SocketContext.Provider>
   );

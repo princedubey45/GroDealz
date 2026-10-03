@@ -15,9 +15,32 @@ const STATUS_STEPS = [
 export default function OrderDetail() {
   const { id }         = useParams();
   const navigate       = useNavigate();
-  const { trackOrder } = useSocket();
+  const { trackOrder, socket } = useSocket();
   const [order, setOrder]   = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!socket || !order) return;
+    const handleUpdate = (data) => {
+      if (data.orderId === order.orderId || data.orderId === order._id) {
+        setOrder(prev => {
+          if (!prev) return prev;
+          const updated = { ...prev, status: data.status };
+          if (data.riderName || data.riderPhone || data.estimatedTime) {
+             updated.delivery = {
+               ...updated.delivery,
+               ...(data.riderName && { riderName: data.riderName }),
+               ...(data.riderPhone && { riderPhone: data.riderPhone }),
+               ...(data.estimatedTime && { estimatedTime: data.estimatedTime })
+             };
+          }
+          return updated;
+        });
+      }
+    };
+    socket.on('order_update', handleUpdate);
+    return () => socket.off('order_update', handleUpdate);
+  }, [socket, order]);
 
   useEffect(() => {
     api.get(`/orders/${id}`)
