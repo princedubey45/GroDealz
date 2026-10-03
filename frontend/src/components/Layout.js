@@ -14,6 +14,7 @@ const NAV = [
   { to: '/stores',          icon: '🗺️', label: 'Stores',        public: true },
   { to: '/cart',            icon: '🧺', label: 'Cart',          public: false },
   { to: '/orders',          icon: '📦', label: 'Orders',        public: false },
+  { to: '/support',         icon: '🎫', label: 'Support',       public: false },
   { to: '/dashboard',       icon: '📊', label: 'Dashboard',     owner: true },
   { to: '/manage-products', icon: '➕', label: 'Add Products',  owner: true },
   { to: '/ai-insights',     icon: '📈', label: 'AI Insights',   owner: true },

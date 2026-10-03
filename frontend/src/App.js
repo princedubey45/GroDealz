@@ -20,6 +20,7 @@ const Register      = lazy(() => import('./pages/Register'));
 const AIInsights    = lazy(() => import('./pages/AIInsights'));
 const StoreFinder   = lazy(() => import('./pages/StoreFinder'));
 const AIGroceryPlanner = lazy(() => import('./pages/AIGroceryPlanner'));
+const Support       = lazy(() => import('./pages/Support'));
 
 const Loader = () => (
   <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',flexDirection:'column',gap:16 }}>
@@ -57,6 +58,7 @@ function App() {
                   <Route path="/dashboard" element={<PrivateRoute ownerOnly><Dashboard /></PrivateRoute>} />
                   <Route path="/ai-insights" element={<PrivateRoute ownerOnly><AIInsights /></PrivateRoute>} />
                   <Route path="/manage-products" element={<PrivateRoute ownerOnly><ManageProducts /></PrivateRoute>} />
+                  <Route path="/support" element={<PrivateRoute><Support /></PrivateRoute>} />
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
