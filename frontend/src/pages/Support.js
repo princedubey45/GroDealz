@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import api from '../hooks/useApi';
 
 export default function Support() {
   const { user } = useAuth();
@@ -19,11 +20,8 @@ export default function Support() {
 
   const fetchTickets = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/tickets', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      const data = await res.json();
-      if (res.ok) setTickets(data);
+      const res = await api.get('/tickets');
+      setTickets(res.data);
     } catch (e) {
       console.error(e);
     }
@@ -31,14 +29,9 @@ export default function Support() {
 
   const fetchMessages = async (ticketId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/tickets/${ticketId}/messages`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessages(data);
-        if (socket) socket.emit('join_ticket', ticketId);
-      }
+      const res = await api.get(`/tickets/${ticketId}/messages`);
+      setMessages(res.data);
+      if (socket) socket.emit('join_ticket', ticketId);
     } catch (e) {
       console.error(e);
     }
@@ -55,19 +48,9 @@ export default function Support() {
   const handleCreateTicket = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/tickets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ issueType, initialMessage: newTicketMessage, isSecure })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setTickets([data.ticket, ...tickets]);
-        setNewTicketMessage('');
-      }
+      const res = await api.post('/tickets', { issueType, initialMessage: newTicketMessage, isSecure });
+      setTickets([res.data.ticket, ...tickets]);
+      setNewTicketMessage('');
     } catch (e) {
       console.error(e);
     }
