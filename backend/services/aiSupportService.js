@@ -1,4 +1,9 @@
 const Order = require('../models/Order');
+const { OpenAI } = require('openai');
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || 'dummy_key' // User will need to set this in .env
+});
 
 // Customer -> Chat / Ticket -> AI Support Agent -> Intent Detection
 const detectIntent = (message) => {
@@ -31,12 +36,31 @@ const retrieveContext = async (userId, orderId = null) => {
 };
 
 // Business Rule Validation & Auto Resolution (Tool Calling)
-const executeAutoResolution = async (intent, context) => {
+const executeAutoResolution = async (intent, context, messageText) => {
   const { latestOrder, businessRules } = context;
 
-  // Protect payment specifics directly via intent fallback
+  // For GENERAL or conversational messages, let's use OpenAI to generate a proper response
   if (intent === 'GENERAL') {
-    return { success: false, response: "I'll connect you with a human agent for this specific issue.", confidence: 0.4 };
+    try {
+      if (!process.env.OPENAI_API_KEY) {
+        return { success: false, response: "I'll connect you with a human agent for this specific issue.", confidence: 0.4 };
+      }
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "You are a helpful and polite customer support AI for an online grocery store called GroDealz. If the user greets you, greet them back warmly and ask how you can help them with their groceries or orders. If they ask a general question, provide a helpful answer." },
+          { role: "user", content: messageText }
+        ],
+        temperature: 0.7,
+        max_tokens: 150
+      });
+      
+      return { success: true, response: response.choices[0].message.content, confidence: 0.9 };
+    } catch (err) {
+      console.error('OpenAI Error:', err);
+      return { success: false, response: "I'll connect you with a human agent for this specific issue.", confidence: 0.4 };
+    }
   }
 
   if (!latestOrder) {
@@ -79,7 +103,7 @@ exports.processCustomerMessage = async (messageText, userId) => {
   const context = await retrieveContext(userId);
 
   // 3. Tool Calling & Auto Resolution Validation
-  const resolution = await executeAutoResolution(intent, context);
+  const resolution = await executeAutoResolution(intent, context, messageText);
 
   return {
     intent,
