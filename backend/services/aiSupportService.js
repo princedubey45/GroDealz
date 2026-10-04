@@ -40,32 +40,37 @@ const retrieveContext = async (userId, orderId = null) => {
 const executeAutoResolution = async (intent, context, messageText) => {
   const { latestOrder, businessRules } = context;
 
-  // For GENERAL or conversational messages, let's use OpenAI to generate a proper response
-  if (intent === 'GENERAL') {
+  // Helper to generate dynamic GPT responses instead of hardcoded strings
+  const generateAIResponse = async (promptContext) => {
     try {
       if (!process.env.OPENROUTER_API_KEY && !process.env.OPENAI_API_KEY) {
-        return { success: false, response: "I'll connect you with a human agent for this specific issue.", confidence: 0.4 };
+        return "I'll connect you with a human agent for this specific issue.";
       }
-      
       const response = await openai.chat.completions.create({
         model: "openai/gpt-3.5-turbo",
         messages: [
-          { role: "system", content: "You are a helpful and polite customer support AI for an online grocery store called GroDealz. If the user greets you, greet them back warmly and ask how you can help them with their groceries or orders. If they ask a general question, provide a helpful answer." },
+          { role: "system", content: `You are a helpful and polite customer support AI for an online grocery store called GroDealz. ${promptContext}` },
           { role: "user", content: messageText }
         ],
         temperature: 0.7,
         max_tokens: 150
       });
-      
-      return { success: true, response: response.choices[0].message.content, confidence: 0.9 };
+      return response.choices[0].message.content;
     } catch (err) {
       console.error('OpenAI Error:', err);
-      return { success: false, response: "I'll connect you with a human agent for this specific issue.", confidence: 0.4 };
+      return "I'll connect you with a human agent for this specific issue.";
     }
+  };
+
+  // For GENERAL or conversational messages
+  if (intent === 'GENERAL') {
+    const reply = await generateAIResponse("If the user greets you, greet them back warmly and ask how you can help them with their groceries or orders. If they ask a general question, provide a helpful answer.");
+    return { success: true, response: reply, confidence: 0.9 };
   }
 
   if (!latestOrder) {
-    return { success: false, response: "I couldn't find a recent order for your account. Could you provide your order ID to a human agent?", confidence: 0.4 };
+    const reply = await generateAIResponse("The user is asking about an order, but we couldn't find a recent order for their account. Politely tell them you couldn't find a recent order and ask them to provide their order ID so you can assist them.");
+    return { success: false, response: reply, confidence: 0.4 };
   }
 
   switch (intent) {
@@ -73,26 +78,26 @@ const executeAutoResolution = async (intent, context, messageText) => {
       if (businessRules.canRefund(latestOrder.status)) {
         return { success: true, response: `✅ **Auto-Resolution:** I have verified your request. A full refund of ₹${latestOrder.pricing?.total} for order ${latestOrder.orderId} has been initiated to your original payment method.`, confidence: 0.95 };
       }
-      return { success: false, response: "Your order is not eligible for an automatic refund at this stage. I am escalating this to a human agent.", confidence: 0.3 };
+      return { success: false, response: await generateAIResponse(`The user wants a refund, but their order status is '${latestOrder.status}', which is not eligible for an automatic refund. Politely explain this and say you are escalating it to a human agent.`), confidence: 0.3 };
 
     case 'REPLACEMENT':
       if (latestOrder.status === 'delivered') {
         return { success: true, response: `✅ **Auto-Resolution:** I'm sorry to hear that. I've automatically arranged a replacement for the affected items in order ${latestOrder.orderId}.`, confidence: 0.9 };
       }
-      return { success: false, response: "I can't issue a replacement yet because your order isn't marked as delivered. Escalating to an agent.", confidence: 0.4 };
+      return { success: false, response: await generateAIResponse(`The user wants a replacement, but their order status is '${latestOrder.status}' (not delivered). Politely explain you can't issue a replacement yet and are escalating to an agent.`), confidence: 0.4 };
 
     case 'CANCELLATION':
       if (businessRules.canCancel(latestOrder.status)) {
         // In a real system, we'd trigger a tool call here to mutate the DB
         return { success: true, response: `✅ **Auto-Resolution:** I've successfully cancelled order ${latestOrder.orderId}. If you paid online, the amount will be refunded.`, confidence: 0.98 };
       }
-      return { success: false, response: `Order ${latestOrder.orderId} is already '${latestOrder.status.replace(/_/g, ' ')}' and cannot be cancelled automatically. Escalating to an agent.`, confidence: 0.3 };
+      return { success: false, response: await generateAIResponse(`The user wants to cancel order ${latestOrder.orderId}, but it is already '${latestOrder.status.replace(/_/g, ' ')}' and cannot be cancelled automatically. Politely explain this and escalate to an agent.`), confidence: 0.3 };
 
     case 'ORDER_INFO':
       return { success: true, response: `✅ **Auto-Resolution:** Your order ${latestOrder.orderId} is currently **${latestOrder.status.replace(/_/g, ' ')}**. ${latestOrder.delivery?.estimatedTime ? 'ETA is ~' + latestOrder.delivery.estimatedTime + ' minutes.' : ''}`, confidence: 0.99 };
 
     default:
-      return { success: false, response: "Let me connect you with a human agent.", confidence: 0.5 };
+      return { success: false, response: await generateAIResponse("You are unsure how to automatically resolve this issue. Politely let the user know you are connecting them with a human agent."), confidence: 0.5 };
   }
 };
 
