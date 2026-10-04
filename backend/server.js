@@ -95,9 +95,32 @@ io.on('connection', (socket) => {
     // In a real scenario, this is where you'd save it to the DB if not already saved via REST,
     // or you just emit and let the client know it arrived.
     const Message = require('./models/Message');
+    const Ticket = require('./models/Ticket');
+    const aiSupportService = require('./services/aiSupportService');
     try {
       const newMsg = new Message({ ticket: ticketId, sender, text });
       await newMsg.save();
+
+      if (sender === 'User') {
+        const ticket = await Ticket.findById(ticketId);
+        if (ticket && ticket.status !== 'Resolved') {
+          const aiAnalysis = await aiSupportService.processCustomerMessage(text, ticket.user);
+          
+          if (aiAnalysis.requiresHuman) {
+            ticket.status = 'Escalated';
+          } else {
+            ticket.status = 'Resolved';
+          }
+          ticket.aiConfidence = aiAnalysis.confidence;
+          await ticket.save();
+
+          const aiMsgText = aiAnalysis.response;
+          const aiMsg = new Message({ ticket: ticketId, sender: 'AI', text: aiMsgText });
+          await aiMsg.save();
+          
+          io.to(`ticket_${ticketId}`).emit('receive_message', { ticketId, text: aiMsgText, sender: 'AI', createdAt: aiMsg.createdAt || new Date() });
+        }
+      }
     } catch (e) {
       console.error('Error saving socket message', e);
     }
