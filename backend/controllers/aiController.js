@@ -151,9 +151,34 @@ async function validateBasket(req, res) {
   }
 }
 
+const { processAgentShoppingRequest } = require('../ai/shoppingAgent');
+
+async function shoppingAgent(req, res) {
+  try {
+    const query = req.body.query || req.body.message || '';
+    const userPrefs = req.body.preferences || req.user?.profile?.preferences || {};
+    const result = await processAgentShoppingRequest(query, userPrefs);
+
+    // Verify basket safety: ensure every product exists in MongoDB and stock is valid
+    if (result.success && result.strategies?.multiStore?.allItems) {
+      const verification = await validateAndVerifyBasket(result.strategies.multiStore.allItems);
+      result.safetyVerification = {
+        verified: verification.valid,
+        verifiedItemCount: verification.verifiedItems?.length || 0
+      };
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error('Shopping Agent Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   copilot,
   planGroceries,
+  shoppingAgent,
   basketCompletion,
   optimizeBudget,
   semanticSearch,

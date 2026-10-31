@@ -2,17 +2,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  GroDealz AI Shopping Copilot & NLP Chatbot Engine
 // ─────────────────────────────────────────────────────────────────────────────
-const Order   = require('../models/Order');
+const Order = require('../models/Order');
 const Product = require('../models/Product');
-const Store   = require('../models/Store');
+const Store = require('../models/Store');
 const { extractIntentAndEntities } = require('./intentExtractor');
-const { generateGroceryPlan }      = require('./groceryPlanner');
-const { optimizeBasketBudget }     = require('./budgetOptimizer');
-const { getBasketCompletions }     = require('./basketCompletion');
-const { semanticProductSearch }    = require('./semanticSearch');
-const { generateRecurringPlan }    = require('./recurringPlanner');
-const { compareStorePrices }       = require('./storeComparator');
-const { getRecommendations }       = require('./recommendationEngine');
+const { generateGroceryPlan } = require('./groceryPlanner');
+const { optimizeBasketBudget } = require('./budgetOptimizer');
+const { getBasketCompletions } = require('./basketCompletion');
+const { semanticProductSearch } = require('./semanticSearch');
+const { generateRecurringPlan } = require('./recurringPlanner');
+const { compareStorePrices } = require('./storeComparator');
+const { getRecommendations } = require('./recommendationEngine');
 
 async function handleOrderStatus(entities, userId) {
   try {

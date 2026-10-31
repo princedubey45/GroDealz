@@ -1,2 +1,5 @@
 node_modules/
 frontend/node_modules/
+backend/test_openai.js
+backend/test_openai2.js
+.DS_Store

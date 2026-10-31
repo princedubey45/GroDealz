@@ -58,18 +58,18 @@ export default function Cart() {
     if (!items.length) return;
     setPlacing(true);
     try {
-      const storeId = items[0].store || '000000000000000000000001';
-      const orderRes = await api.post('/orders', {
-        items: items.map(i => ({ productId: i._id, quantity: i.qty })),
-        storeId,
+      const orderRes = await api.post('/orders/agent-checkout', {
+        items: items.map(i => ({ productId: i._id, quantity: i.qty, storeId: i.store })),
         deliveryAddress: address,
         paymentMethod
       });
-      
-      const groDealzOrder = orderRes.data;
+
+      const checkoutData = orderRes.data;
+      const primaryOrderId = checkoutData.orders?.[0]?._id;
+      const groupId = checkoutData.groupId;
 
       if (paymentMethod === 'online') {
-        const rzpRes = await api.post('/payment/create-order', { orderId: groDealzOrder._id });
+        const rzpRes = await api.post('/payment/create-order', { groupId, orderId: primaryOrderId });
         const { id, amount, currency, key } = rzpRes.data;
 
         const options = {
@@ -77,7 +77,7 @@ export default function Cart() {
           amount: amount,
           currency: currency,
           name: "GroDealz",
-          description: "Grocery Order",
+          description: checkoutData.isMultiStore ? `Multi-Store Order (${checkoutData.totalStores} shops)` : "Grocery Order",
           order_id: id,
           handler: async function (response) {
             try {
@@ -85,7 +85,8 @@ export default function Cart() {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                orderId: groDealzOrder._id
+                groupId,
+                orderId: primaryOrderId
               });
               if (verifyRes.data.success) {
                 clearCart();
@@ -93,7 +94,7 @@ export default function Cart() {
               }
             } catch (err) {
               alert('Payment Verification Failed!');
-              navigate('/orders'); // still navigate so they can see pending order
+              navigate('/orders');
             }
           },
           prefill: {
@@ -104,9 +105,9 @@ export default function Cart() {
         };
 
         const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function (response){
-           alert('Payment failed!');
-           navigate('/orders');
+        rzp.on('payment.failed', function (response) {
+          alert('Payment failed!');
+          navigate('/orders');
         });
         rzp.open();
       } else {
@@ -118,41 +119,41 @@ export default function Cart() {
     } finally { setPlacing(false); }
   };
 
-  const card = { background:'var(--card, #1e293b)', border:'1px solid var(--border, #334155)', borderRadius:14, padding:18, marginBottom:12, color:'var(--text, #fff)' };
+  const card = { background: 'var(--card, #1e293b)', border: '1px solid var(--border, #334155)', borderRadius: 14, padding: 18, marginBottom: 12, color: 'var(--text, #fff)' };
   const delivery = 30;
 
   if (!items?.length) return (
-    <div style={{ textAlign:'center', padding:'80px 0', color:'var(--text, #fff)' }}>
-      <div style={{ fontSize:64, marginBottom:16 }}>🛒</div>
-      <div style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, marginBottom:8 }}>Your cart is empty</div>
-      <p style={{ color:'var(--muted)', marginBottom:20 }}>Add items manually or generate a plan with AI</p>
+    <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text, #fff)' }}>
+      <div style={{ fontSize: 64, marginBottom: 16 }}>🛒</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Your cart is empty</div>
+      <p style={{ color: 'var(--muted)', marginBottom: 20 }}>Add items manually or generate a plan with AI</p>
       <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-        <button style={{ background:'#10b981', color:'#fff', padding:'11px 24px', borderRadius:10, fontSize:14, fontWeight:700, cursor:'pointer', border:'none' }} onClick={() => navigate('/products')}>Browse Products</button>
-        <button style={{ background:'rgba(16,185,129,0.15)', color:'#10b981', border:'1px solid #10b981', padding:'11px 24px', borderRadius:10, fontSize:14, fontWeight:700, cursor:'pointer' }} onClick={() => navigate('/ai-planner')}>🤖 AI Grocery Planner</button>
+        <button style={{ background: '#10b981', color: '#fff', padding: '11px 24px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', border: 'none' }} onClick={() => navigate('/products')}>Browse Products</button>
+        <button style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid #10b981', padding: '11px 24px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/ai-planner')}>🤖 AI Grocery Planner</button>
       </div>
     </div>
   );
 
   return (
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', gap:20, alignItems:'start', color:'var(--text, #fff)' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, alignItems: 'start', color: 'var(--text, #fff)' }}>
       {/* Items List & Basket Completion */}
       <div>
-        <div style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:800, marginBottom:18 }}>🛒 Your Cart ({items?.length || 0} items)</div>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, marginBottom: 18 }}>🛒 Your Cart ({items?.length || 0} items)</div>
         {items.map(item => (
-          <div key={item._id} style={{ ...card, display:'flex', alignItems:'center', gap:14 }}>
-            <div style={{ fontSize:40, width:56, textAlign:'center' }}>{item.emoji || '🛒'}</div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontWeight:600, fontSize:14, marginBottom:3 }}>{item.name}</div>
-              <div style={{ fontSize:12, color:'var(--muted)' }}>{item.unit}</div>
-              <div style={{ fontSize:16, fontWeight:800, color:'#10b981', marginTop:4 }}>₹{item.price}</div>
+          <div key={item._id} style={{ ...card, display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ fontSize: 40, width: 56, textAlign: 'center' }}>{item.emoji || '🛒'}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>{item.name}</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)' }}>{item.unit}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#10b981', marginTop: 4 }}>₹{item.price}</div>
             </div>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <button style={{ width:28, height:28, borderRadius:8, background:'var(--card2, #334155)', border:'1px solid var(--border, #334155)', color:'var(--text)', fontSize:16, cursor:'pointer' }} onClick={() => updateQty(item._id, item.qty - 1)}>−</button>
-              <span style={{ minWidth:20, textAlign:'center', fontWeight:700 }}>{item.qty}</span>
-              <button style={{ width:28, height:28, borderRadius:8, background:'var(--card2, #334155)', border:'1px solid var(--border, #334155)', color:'var(--text)', fontSize:16, cursor:'pointer' }} onClick={() => updateQty(item._id, item.qty + 1)}>+</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--card2, #334155)', border: '1px solid var(--border, #334155)', color: 'var(--text)', fontSize: 16, cursor: 'pointer' }} onClick={() => updateQty(item._id, item.qty - 1)}>−</button>
+              <span style={{ minWidth: 20, textAlign: 'center', fontWeight: 700 }}>{item.qty}</span>
+              <button style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--card2, #334155)', border: '1px solid var(--border, #334155)', color: 'var(--text)', fontSize: 16, cursor: 'pointer' }} onClick={() => updateQty(item._id, item.qty + 1)}>+</button>
             </div>
-            <div style={{ fontWeight:700, fontSize:15, color:'#10b981', width:70, textAlign:'right' }}>₹{item.price * item.qty}</div>
-            <button style={{ background:'rgba(248,113,113,0.1)', border:'1px solid rgba(248,113,113,0.2)', color:'#f87171', borderRadius:7, width:30, height:30, cursor:'pointer', fontSize:14 }} onClick={() => removeItem(item._id)}>✕</button>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#10b981', width: 70, textAlign: 'right' }}>₹{item.price * item.qty}</div>
+            <button style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', borderRadius: 7, width: 30, height: 30, cursor: 'pointer', fontSize: 14 }} onClick={() => removeItem(item._id)}>✕</button>
           </div>
         ))}
 
@@ -211,24 +212,24 @@ export default function Cart() {
 
         {/* Order Summary */}
         <div style={card}>
-          <div style={{ fontFamily:'var(--font-display)', fontSize:17, fontWeight:800, marginBottom:16 }}>Order Summary</div>
-          <div style={{ marginBottom:12 }}>
-            <label style={{ fontSize:12, color:'var(--muted)', display:'block', marginBottom:6 }}>Delivery Address</label>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 800, marginBottom: 16 }}>Order Summary</div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 6 }}>Delivery Address</label>
             <input
-              style={{ background:'var(--card2, #334155)', border:'1px solid var(--border, #334155)', borderRadius:9, padding:'9px 13px', fontSize:13, color:'var(--text)', width:'100%' }}
+              style={{ background: 'var(--card2, #334155)', border: '1px solid var(--border, #334155)', borderRadius: 9, padding: '9px 13px', fontSize: 13, color: 'var(--text)', width: '100%' }}
               value={address}
               onChange={e => setAddress(e.target.value)}
             />
           </div>
-          {[['Subtotal', `₹${total}`], ['Delivery fee', `₹${delivery}`], ['Discount', '₹0']].map(([l,v]) => (
-            <div key={l} style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'var(--text2)', marginBottom:8 }}>
+          {[['Subtotal', `₹${total}`], ['Delivery fee', `₹${delivery}`], ['Discount', '₹0']].map(([l, v]) => (
+            <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text2)', marginBottom: 8 }}>
               <span>{l}</span><span>{v}</span>
             </div>
           ))}
           <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize:12, color:'var(--muted)', display:'block', marginBottom:6 }}>Payment Method</label>
+            <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 6 }}>Payment Method</label>
             <select
-              style={{ background:'var(--card2, #334155)', border:'1px solid var(--border, #334155)', borderRadius:9, padding:'9px 13px', fontSize:13, color:'var(--text)', width:'100%' }}
+              style={{ background: 'var(--card2, #334155)', border: '1px solid var(--border, #334155)', borderRadius: 9, padding: '9px 13px', fontSize: 13, color: 'var(--text)', width: '100%' }}
               value={paymentMethod}
               onChange={e => setPaymentMethod(e.target.value)}
             >
@@ -236,14 +237,14 @@ export default function Cart() {
               <option value="online">Online Payment (Razorpay)</option>
             </select>
           </div>
-          <div style={{ borderTop:'1px solid var(--border, #334155)', paddingTop:12, display:'flex', justifyContent:'space-between', fontFamily:'var(--font-display)', fontSize:18, fontWeight:800, marginBottom:16 }}>
-            <span>Total</span><span style={{ color:'#10b981' }}>₹{total + delivery}</span>
+          <div style={{ borderTop: '1px solid var(--border, #334155)', paddingTop: 12, display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 800, marginBottom: 16 }}>
+            <span>Total</span><span style={{ color: '#10b981' }}>₹{total + delivery}</span>
           </div>
-          <div style={{ background:'rgba(16,185,129,0.05)', border:'1px solid rgba(16,185,129,0.15)', borderRadius:9, padding:'10px 13px', marginBottom:14, fontSize:12, color:'var(--text2)' }}>
+          <div style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 9, padding: '10px 13px', marginBottom: 14, fontSize: 12, color: 'var(--text2)' }}>
             🤖 <strong>AI Estimate:</strong> ~25–30 min delivery · {items.length * 2 + 10} min prep time
           </div>
           <button
-            style={{ width:'100%', background:'#10b981', color:'#fff', border:'none', borderRadius:10, padding:13, fontSize:15, fontWeight:800, cursor:'pointer', opacity: placing ? 0.6 : 1, fontFamily:'var(--font-display)' }}
+            style={{ width: '100%', background: '#10b981', color: '#fff', border: 'none', borderRadius: 10, padding: 13, fontSize: 15, fontWeight: 800, cursor: 'pointer', opacity: placing ? 0.6 : 1, fontFamily: 'var(--font-display)' }}
             onClick={placeOrder} disabled={placing}
           >{placing ? 'Processing…' : (paymentMethod === 'online' ? '💳 Pay Now' : '🚀 Place Order (COD)')}</button>
         </div>

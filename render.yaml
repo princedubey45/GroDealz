@@ -17,3 +17,5 @@ services:
         value: xxxxxxxxxxxxxxxx
       - key: RAZORPAY_WEBHOOK_SECRET
         value: xxxxxxxxxxxxxxxx
+      - key: OPENROUTER_API_KEY
+        sync: false

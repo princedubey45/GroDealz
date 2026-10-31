@@ -1,34 +1,34 @@
 // src/components/Layout.js
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth }   from '../context/AuthContext';
-import { useCart }   from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { useSocket } from '../context/SocketContext';
-import Chatbot       from './Chatbot';
-import styles        from './Layout.module.css';
+import Chatbot from './Chatbot';
+import styles from './Layout.module.css';
 
 const NAV = [
-  { to: '/',                icon: '⚡', label: 'Home',          public: true },
-  { to: '/products',        icon: '🛒', label: 'Shop',          public: true },
-  { to: '/ai-planner',      icon: '🤖', label: 'AI Copilot',     public: true },
-  { to: '/stores',          icon: '🗺️', label: 'Stores',        public: true },
-  { to: '/cart',            icon: '🧺', label: 'Cart',          public: false },
-  { to: '/orders',          icon: '📦', label: 'Orders',        public: false },
-  { to: '/support',         icon: '🎫', label: 'Support',       public: false },
-  { to: '/dashboard',       icon: '📊', label: 'Dashboard',     owner: true },
-  { to: '/manage-products', icon: '➕', label: 'Add Products',  owner: true },
-  { to: '/ai-insights',     icon: '📈', label: 'AI Insights',   owner: true },
+  { to: '/', icon: '⚡', label: 'Home', public: true },
+  { to: '/products', icon: '🛒', label: 'Shop', public: true },
+  { to: '/ai-planner', icon: '🤖', label: 'AI Copilot', public: true },
+  { to: '/stores', icon: '🗺️', label: 'Stores', public: true },
+  { to: '/cart', icon: '🧺', label: 'Cart', public: false },
+  { to: '/orders', icon: '📦', label: 'Orders', public: false },
+  { to: '/support', icon: '🎫', label: 'Support', public: false },
+  { to: '/dashboard', icon: '📊', label: 'Dashboard', owner: true },
+  { to: '/manage-products', icon: '➕', label: 'Add Products', owner: true },
+  { to: '/ai-insights', icon: '📈', label: 'AI Insights', owner: true },
 ];
 
 export default function Layout() {
-  const { user, logout }   = useAuth();
-  const { itemCount }      = useCart();
+  const { user, logout } = useAuth();
+  const { itemCount } = useCart();
   const { connected, unreadCount, notifications, markRead } = useSocket();
-  const location           = useLocation();
-  const navigate           = useNavigate();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const [showNotif,  setShowNotif]  = useState(false);
-  const [chatOpen,   setChatOpen]   = useState(false);
+  const [showNotif, setShowNotif] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isOwner = user && ['owner', 'admin'].includes(user.role);
@@ -48,7 +48,7 @@ export default function Layout() {
   }, []);
 
   const visibleNav = NAV.filter(n => {
-    if (n.owner)   return isOwner;
+    if (n.owner) return isOwner;
     if (!n.public) return !!user;
     return true;
   });
@@ -110,7 +110,7 @@ export default function Layout() {
           </div>
         ) : (
           <div className={styles.authButtons}>
-            <Link to="/login"    className={styles.btnLogin}>Login</Link>
+            <Link to="/login" className={styles.btnLogin}>Login</Link>
             <Link to="/register" className={styles.btnRegister}>Sign Up</Link>
           </div>
         )}

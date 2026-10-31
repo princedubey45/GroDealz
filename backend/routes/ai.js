@@ -3,9 +3,9 @@
 //  GroDealz AI Routes
 // ─────────────────────────────────────────────────────────────────────────────
 const express = require('express');
-const router  = express.Router();
-const jwt     = require('jsonwebtoken');
-const User    = require('../models/User');
+const router = express.Router();
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const aiController = require('../controllers/aiController');
 
@@ -27,6 +27,8 @@ const optionalAuth = async (req, res, next) => {
 // Endpoints
 router.post('/copilot', optionalAuth, aiController.copilot);
 router.post('/plan-groceries', optionalAuth, aiController.planGroceries);
+router.post('/shopping-agent', optionalAuth, aiController.shoppingAgent);
+router.post('/agent', optionalAuth, aiController.shoppingAgent);
 router.post('/basket-completion', optionalAuth, aiController.basketCompletion);
 router.post('/optimize-budget', optionalAuth, aiController.optimizeBudget);
 router.get('/semantic-search', aiController.semanticSearch);

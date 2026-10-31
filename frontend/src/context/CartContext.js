@@ -18,7 +18,13 @@ export function CartProvider({ children }) {
     setItems(prev => {
       const existing = prev.find(i => i._id === product._id);
       if (existing) return prev.map(i => i._id === product._id ? { ...i, qty: i.qty + qty } : i);
-      return [...prev, { ...product, qty }];
+      return [...prev, {
+        ...product,
+        qty,
+        store: product.store?._id || product.store?.id || product.store,
+        storeName: product.store?.name || product.storeName,
+        storeEmoji: product.store?.emoji || product.storeEmoji
+      }];
     });
   };
 
@@ -29,11 +35,13 @@ export function CartProvider({ children }) {
         const prodId = item._id || item.productId || item.product;
         const existingIdx = updated.findIndex(i => i._id === prodId);
         const qtyToAdd = item.quantity || item.qty || 1;
+        const storeId = item.store?.id || item.store?._id || item.store;
 
         if (existingIdx > -1) {
           updated[existingIdx] = {
             ...updated[existingIdx],
-            qty: updated[existingIdx].qty + qtyToAdd
+            qty: updated[existingIdx].qty + qtyToAdd,
+            store: updated[existingIdx].store || storeId
           };
         } else {
           updated.push({
@@ -43,7 +51,10 @@ export function CartProvider({ children }) {
             mrp: item.mrp || item.price,
             unit: item.unit,
             emoji: item.emoji || '🛒',
-            qty: qtyToAdd
+            qty: qtyToAdd,
+            store: storeId,
+            storeName: item.store?.name,
+            storeEmoji: item.store?.emoji
           });
         }
       }
@@ -59,7 +70,10 @@ export function CartProvider({ children }) {
       mrp: item.mrp || item.price,
       unit: item.unit,
       emoji: item.emoji || '🛒',
-      qty: item.quantity || item.qty || 1
+      qty: item.quantity || item.qty || 1,
+      store: item.store?.id || item.store?._id || item.store,
+      storeName: item.store?.name,
+      storeEmoji: item.store?.emoji
     }));
     setItems(formatted);
   };
@@ -73,7 +87,7 @@ export function CartProvider({ children }) {
 
   const clearCart = () => setItems([]);
 
-  const total     = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
   const itemCount = items.reduce((s, i) => s + i.qty, 0);
 
   return (
