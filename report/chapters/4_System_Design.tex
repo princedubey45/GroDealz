@@ -1,0 +1,160 @@
+% ─────────────────────────────────────────────────────────────────────────────
+% CHAPTER 4: System Design
+% ─────────────────────────────────────────────────────────────────────────────
+
+This chapter translates the requirements specified in Chapter~3 into architectural, database, mathematical, and algorithmic designs. It details the high-level system tiers, data models, the autonomous agent workflow, the merchant quotation engine formulas, and real-time communication events.
+
+\section{High-Level Architecture}
+
+GroDealz is structured as a modular, three-tier client-server architecture designed for high responsiveness and clear separation of concerns, as illustrated in Figure~\ref{fig:arch}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth,keepaspectratio]{figures/three_tier.png}
+\caption{Three-Tier Architecture of the GroDealz Platform}
+\label{fig:arch}
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Presentation Tier (Frontend):} A single-page application built using React 18, React Router v6, and scoped CSS modules. It uses React context providers for user authentication state (\texttt{AuthContext}), client-side cart management with \texttt{localStorage} persistence (\texttt{CartContext}), and WebSocket subscriptions (\texttt{SocketContext}).
+    \item \textbf{Application Tier (Backend Services):}
+    \begin{itemize}
+        \item \textbf{Node.js / Express Core Server:} Handles standard REST APIs for authentication, product catalog browsing, order placements, and support tickets.
+        \item \textbf{Socket.IO Server:} Operates alongside Express on the same HTTP server to maintain persistent WebSocket connections for live notifications and status sync.
+        \item \textbf{Quotation Engine Service (\texttt{quotationEngine.js}):} Evaluates merchant line-item bids, calculates totals, executes multi-criteria ranking algorithms, and handles atomic order conversions.
+        \item \textbf{Python Agent Service (FastAPI / LangGraph):} Houses the autonomous grocery shopping agent, coordinating cross-store catalog searches, price audits, and multi-store basket optimizations.
+    \end{itemize}
+    \item \textbf{Data Tier (Database):} A MongoDB database accessed via Mongoose ODM, utilizing compound indexes for fast lookups by store, category, and order status.
+\end{enumerate}
+
+\section{Database Design and Data Models}
+
+The database schema connects seven primary collections, as illustrated in the Entity-Relationship Diagram in Figure~\ref{fig:er_diagram}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth,keepaspectratio]{figures/erd.png}
+\caption{Entity-Relationship Diagram (ERD) of GroDealz Database}
+\label{fig:er_diagram}
+\end{figure}
+
+In addition to the standard User, Product, Store, and Order collections, GroDealz introduces two purpose-built schemas for the reverse marketplace:
+
+\subsection{Buyer Request Schema (\texttt{BuyerRequest})}
+Stores custom customer shopping requirements:
+\begin{itemize}
+    \item \texttt{requestId}: Unique human-readable identifier (e.g., \texttt{RFQ-20261031-4821}).
+    \item \texttt{customer}: Reference to the User ID of the buyer.
+    \item \texttt{title}: Short summary (e.g., ``25 kg Basmati Rice for Hostel'').
+    \item \texttt{rawPrompt}: Original natural language text entered by the customer.
+    \item \texttt{items}: Array of requested items, each containing \texttt{name}, \texttt{quantity}, \texttt{unit} (kg, g, L, pack, pc), \texttt{preferredBrand}, and \texttt{qualityGrade}.
+    \item \texttt{budget}: Optional numerical target budget in Indian Rupees.
+    \item \texttt{shareBudgetWithMerchants}: Boolean flag controlling whether competing merchants can see the target budget or if it remains private.
+    \item \texttt{deliveryDeadline}: Timestamp by which delivery is required.
+    \item \texttt{rankingPriority}: Chosen priority criterion (\texttt{lowest\_price}, \texttt{fastest\_delivery}, \texttt{highest\_rated}, \texttt{balanced}).
+    \item \texttt{status}: State tracker (\texttt{open}, \texttt{quotes\_received}, \texttt{negotiating}, \texttt{accepted}, \texttt{cancelled}, \texttt{expired}).
+    \item \texttt{convertedOrderId}: Reference to the final generated Order upon acceptance.
+\end{itemize}
+
+\subsection{Merchant Quotation Schema (\texttt{MerchantQuotation})}
+Stores itemized quotations submitted by competing store owners:
+\begin{itemize}
+    \item \texttt{quotationId}: Unique identifier (e.g., \texttt{QUO-20261031-1049}).
+    \item \texttt{request}: Reference to the corresponding \texttt{BuyerRequest}.
+    \item \texttt{store} and \texttt{merchant}: References to the bidding store and owner.
+    \item \texttt{lineItems}: Array of quoted items with \texttt{productName}, \texttt{quantity}, \texttt{unit}, \texttt{unitPrice}, \texttt{lineTotal}, \texttt{inStock}, and \texttt{brandOffered}.
+    \item \texttt{itemsSubtotal}, \texttt{deliveryCharge}, \texttt{tax}, \texttt{grandTotal}: Transparent numerical financial breakdown.
+    \item \texttt{stockConfirmed}: Boolean confirming warehouse or shelf reservation.
+    \item \texttt{proposedDeliveryDate} and \texttt{expiresAt}: Timing commitments.
+    \item \texttt{counterOffer}: Embedded subdocument containing \texttt{proposedGrandTotal}, \texttt{customerNote}, and timestamp if customer negotiates.
+    \item \texttt{revisionHistory}: Archive of previous quotation versions.
+\end{itemize}
+
+Figure~\ref{fig:uml} shows the UML Class Diagram highlighting the relationship between these domain models and service engines.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth,keepaspectratio]{figures/uml.png}
+\caption{UML Class Diagram for GroDealz Domain Entities and Services}
+\label{fig:uml}
+\end{figure}
+
+\section{Autonomous AI Shopping Agent Workflow}
+
+The Autonomous AI Grocery Shopping Agent (accessible on \texttt{/ai-planner}) operates as a state-machine graph implemented via LangGraph. When a user submits an informal shopping goal (such as \emph{``Party snacks and beverages for 5 people under ₹600''}), execution proceeds through five sequential nodes:
+
+\begin{enumerate}
+    \item \textbf{Parameter Extraction Node:} Employs structured natural language parsing to extract the target count of individuals ($N=5$), planning duration ($D=3\text{ days}$), maximum target budget ($B=₹600$), dietary constraints, and item categories.
+    \item \textbf{Cross-Store Discovery Node:} Queries participating local merchant databases (e.g., FreshMart Central, QuickBazaar, Paona Supermarket) to assemble candidate products matching each needed category.
+    \item \textbf{Fresh Stock Verification Node:} Verifies current shelf quantities and freshness indicators, filtering out items that are out of stock.
+    \item \textbf{Basket Optimization Node:} Solves the single-store versus multi-store tradeoff. Buying all items from one convenient store incurs a single delivery fee ($F_{\text{single}}$), but some items may be priced higher:
+    \begin{equation}
+        C_{\text{single}} = \sum_{i \in I} P_{\text{single}, i} + F_{\text{single}}
+    \end{equation}
+    Splitting items across multiple stores allows selecting the minimum product price $P_{s, i}$ from store $s$, but incurs separate delivery charges $F_s$ for each distinct store visited:
+    \begin{equation}
+        C_{\text{multi}} = \sum_{s \in S_{\text{visited}}} \left( \sum_{i \in I_s} P_{s, i} + F_s \right)
+    \end{equation}
+    The optimizer computes the net financial savings:
+    \begin{equation}
+        \Delta_{\text{savings}} = C_{\text{single}} - C_{\text{multi}}
+    \end{equation}
+    If $\Delta_{\text{savings}} > 0$, the multi-store split is recommended to the customer as the best-value deal.
+    \item \textbf{Store Journey Audit Node:} Generates an audit trail detailing the exact items to pick at each shop and visualizes the itinerary in the user interface.
+\end{enumerate}
+
+\section{Module B Quotation Engine Design}
+
+The Merchant Quotation Engine governs the pricing, ranking, and negotiation lifecycle of custom shopping requirements.
+
+\subsection{Itemized Pricing Calculations}
+Merchants cannot simply quote an arbitrary lump sum; they must submit unit prices for every individual line item requested. This ensures transparency for the customer:
+\begin{align}
+    \text{lineTotal}_i &= \text{quantity}_i \times \text{unitPrice}_i \\
+    \text{itemsSubtotal} &= \sum_{i=1}^n \text{lineTotal}_i \\
+    \text{grandTotal} &= \text{itemsSubtotal} + \text{deliveryCharge} + \text{tax}
+\end{align}
+
+\subsection{Multi-Criteria Dynamic Ranking Formulations}
+Unlike standard platforms that sort solely by price, GroDealz allows customers to rank bids based on their immediate priority:
+
+\begin{enumerate}
+    \item \textbf{Lowest Price Mode (\texttt{lowest\_price}):} Evaluates grand total cost. The lowest grand total receives the highest ranking score:
+    \begin{equation}
+        \text{Score}_{\text{price}} = 1{,}000{,}000 - \text{grandTotal}
+    \end{equation}
+    The merchant with the minimum total is awarded the badge \emph{``Lowest Total Price.''}
+    
+    \item \textbf{Fastest Delivery Mode (\texttt{fastest\_delivery}):} Evaluates the proposed delivery timestamp ($t_{\text{delivery}}$). Bids proposing earlier delivery receive higher scores:
+    \begin{equation}
+        \text{Score}_{\text{delivery}} = T_{\text{future}} - t_{\text{delivery}}
+    \end{equation}
+    The earliest delivery bid receives the badge \emph{``Fastest Delivery.''}
+    
+    \item \textbf{Top Rated Store Mode (\texttt{highest\_rated}):} Prioritizes merchant reliability based on customer reviews and ratings:
+    \begin{equation}
+        \text{Score}_{\text{rating}} = (\text{Rating} \times 1{,}000) + \min(\text{ReviewCount}, 100)
+    \end{equation}
+    The highest-rated vendor is highlighted with the badge \emph{``Top Rated Store.''}
+    
+    \item \textbf{Balanced Composite Mode (\texttt{balanced}):} Combines price, delivery speed, and store reputation into a normalized 100-point composite score:
+    \begin{equation}
+        \text{Score}_{\text{balanced}} = S_{\text{price}} (50\text{ pts}) + S_{\text{speed}} (30\text{ pts}) + S_{\text{reputation}} (20\text{ pts})
+    \end{equation}
+    where:
+    \begin{align}
+        S_{\text{price}} &= 50 \times \left( 1 - \frac{\text{grandTotal} - \text{minPrice}}{\text{maxPrice} - \text{minPrice}} \right) \\
+        S_{\text{speed}} &= 30 \times \left( 1 - \frac{t_{\text{delivery}} - t_{\text{earliest}}}{t_{\text{latest}} - t_{\text{earliest}}} \right) \\
+        S_{\text{reputation}} &= \left( \frac{\text{Rating}}{5.0} \right) \times 20
+    \end{align}
+    If the quoted total is within the customer's target budget, an additional 5-point bonus is applied.
+\end{enumerate}
+
+\section{Real-Time WebSocket Event Architecture}
+
+To provide instantaneous notifications without inefficient browser polling, GroDealz utilizes Socket.IO rooms:
+\begin{itemize}
+    \item \texttt{join\_rfq(requestId)}: Customer joins a private room for their request. When a merchant submits or revises a quote, the server emits \texttt{quote\_update}.
+    \item \texttt{join\_merchants\_rfq}: Merchants join a collective broadcast room. When a customer posts a new requirement, the server emits \texttt{new\_rfq\_available}.
+    \item \texttt{track\_order(orderId)}: Customers track real-time order status transitions (\emph{placed $\to$ confirmed $\to$ delivered}).
+\end{itemize}

@@ -1,0 +1,70 @@
+% ─────────────────────────────────────────────────────────────────────────────
+% CHAPTER 1: Introduction
+% ─────────────────────────────────────────────────────────────────────────────
+
+Everyday grocery shopping is an essential activity for every household. Over the last three to four years, quick-commerce platforms like Blinkit, Zepto, and Instamart have made home delivery very popular across Indian cities. Most of these platforms focus on delivering small orders in ten to twenty minutes from their own private warehouses, usually called dark stores. 
+
+While this rapid delivery model is very convenient for quick emergency purchases, it has clear drawbacks when applied to general household shopping or regional markets such as Imphal:
+\begin{enumerate}
+    \item \textbf{Single-store lock-in:} When a customer opens a typical grocery app, all items must come from that single warehouse. If that store does not have fresh tomatoes or runs out of cooking oil, the customer has to place a completely separate order on another app or visit a physical shop.
+    \item \textbf{No multi-store comparison:} In reality, different local shops offer better prices on different items. For example, a local supermarket might sell staples like wheat flour and basmati rice at wholesale rates, while a fresh organic vendor nearby sells vegetables at half the warehouse price. Manually opening three different apps, checking stock, calculating delivery fees, and placing three separate orders is tedious and time-consuming.
+    \item \textbf{Inability to post custom or bulk requirements:} If a student living in a hostel or a family planning an event needs twenty-five kilograms of rice, five litres of mustard oil, and fifty kilograms of potatoes within a specific budget of ₹2,500, existing apps offer no way to simply post this requirement. Customers are forced to browse fixed packages at fixed retail prices, and nearby neighborhood merchants have no mechanism to compete or provide bulk quotations.
+    \item \textbf{Manual search fatigue:} Entering every grocery item into a search bar one by one takes ten to fifteen minutes every week. Most people already know what they want in plain terms (e.g., \emph{``Groceries for a family of four for three days under ₹1,500''}), but apps force them through a manual search process.
+\end{enumerate}
+
+To address these practical challenges, this project develops \textbf{GroDealz}, an AI-powered grocery shopping platform that combines traditional e-commerce with an autonomous multi-store shopping agent and a reverse merchant quotation engine.
+
+\section{Problem Statement}
+
+The primary problems addressed in this project can be divided into three specific issues:
+
+\begin{enumerate}
+    \item \textbf{Manual Multi-Store Optimization Problem:} A customer wanting to buy a full basket of groceries at the lowest cost must manually compare prices and stock across multiple local vendors. A naive multi-store order might end up costing more if each shop charges a separate delivery fee. The system needs an autonomous optimizer that checks prices, verifies fresh stock across vendors, balances store-hopping delivery fees against product savings, and proves whether splitting the order is actually cheaper than buying everything from one convenient store.
+    \item \textbf{Lack of Reverse Bidding for Custom Requirements (RFQ):} In traditional offline commerce, when someone needs bulk groceries or specific quality grades, they talk directly to local merchants to negotiate prices. In existing digital platforms, communication is strictly one-way: the store sets a rigid price, and the customer either pays it or leaves. There is no platform where a customer can post a requirement in natural language and receive itemized line-item quotations from multiple nearby shops.
+    \item \textbf{Real-Time Synchronization and Support Gaps:} In quick-commerce, customers want real-time visibility into order status changes without constantly refreshing the browser. In addition, when common order issues arise (such as delivery delays or cancellations), human customer support is often slow, while rule-based chatbots fail to understand context or handle sensitive user data securely.
+\end{enumerate}
+
+\section{Objectives of the Project}
+
+The key objectives of this project are:
+
+\begin{enumerate}
+    \item To build an \textbf{Autonomous AI Grocery Shopping Agent} that takes user requests in natural language or Hinglish, understands the household size, duration, and budget, queries multiple local stores, verifies available inventory, and calculates the optimal basket while factoring in individual store delivery charges.
+    \item To implement a visual \textbf{Store Journey Audit} that shows the customer the exact multi-store picking route and clearly presents the net cost savings compared to single-store convenience.
+    \item To build a \textbf{Merchant Quotation Engine (Module B)} supporting a reverse Request for Quotation (RFQ) marketplace where:
+    \begin{itemize}
+        \item Customers can submit shopping requirements with target budgets and delivery deadlines.
+        \item Nearby merchants can view open requests and submit itemized line-item quotations with individual unit prices, delivery charges, and stock confirmations.
+        \item The platform dynamically ranks competing bids based on the customer's selected priority: Lowest Price, Fastest Delivery, Highest Rated Merchant, or Balanced Value.
+        \item Customers and merchants can negotiate through counter-offers and quote revisions, with accepted quotations converting directly into confirmed orders.
+    \end{itemize}
+    \item To integrate a \textbf{Hybrid Recommendation System} using collaborative filtering, content feature vectors, and context-aware time-of-day scoring to personalize the customer's shopping feed.
+    \item To implement an \textbf{Automated Demand Prediction Engine} using time-series smoothing and linear regression running on an hourly cron job to provide stocking recommendations to store owners.
+    \item To develop a \textbf{Customer Support CRM} with automated intent classification, confidence scoring, real-time ticket messaging, and sensitive data (PII) masking.
+    \item To deploy the full-stack system to a cloud environment with a live database and verify its functionality through end-to-end automated tests.
+\end{enumerate}
+
+\section{Scope of the Project}
+
+The scope of this project encompasses:
+\begin{itemize}
+    \item A single-page web application frontend built using React 18, utilizing CSS modules and custom dark-mode design tokens for clear readability and responsive usage across desktops and mobile browsers.
+    \item A RESTful backend API built on Node.js and Express, integrated with MongoDB Atlas via Mongoose ODM for persistent storage of users, products, stores, orders, RFQ requests, quotations, and support tickets.
+    \item A real-time bidirectional communication layer using Socket.IO for live order tracking, merchant RFQ alerts, and customer negotiation updates.
+    \item An autonomous agent backend written in Python using LangGraph and FastAPI, interacting with local store databases and external retailer adapters.
+    \item Role-based access control supporting both customer and store-owner accounts with protected routes and secure JWT authentication.
+\end{itemize}
+
+Items outside the immediate scope of this academic prototype include native mobile applications (iOS/Android APKs) and direct bank-integrated payment gateways. All monetary transactions in the prototype are simulated or use Cash on Delivery (COD) workflows.
+
+\section{Structure of the Report}
+
+The remainder of this report is organized as follows:
+\begin{itemize}
+    \item \textbf{Chapter 2 (Literature Survey):} Reviews previous work in recommendation algorithms, e-grocery supply chains, demand forecasting techniques, autonomous agent frameworks, and reverse auction mechanisms.
+    \item \textbf{Chapter 3 (Requirement Engineering):} Details the functional and non-functional requirements, stakeholder roles, and core use cases.
+    \item \textbf{Chapter 4 (System Design):} Explains the architectural design, database schemas, LangGraph agent workflow, quotation ranking mathematics, and real-time event flow.
+    \item \textbf{Chapter 5 (Implementation):} Describes the technical implementation, detailing the core services, algorithms, and frontend component structures.
+    \item \textbf{Chapter 6 (Results and Interface Walkthrough):} Presents the test results, performance metrics, and a detailed screenshot walkthrough of the functioning website.
+    \item \textbf{Chapter 7 (Conclusion and Future Scope):} Summarizes the completed work, discusses limitations, and outlines future enhancements.
+\end{itemize}

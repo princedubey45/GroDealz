@@ -1,0 +1,267 @@
+\documentclass[a4paper, 12pt, oneside]{report}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{20B9}{\text{Rs.\,}}
+\usepackage[T1]{fontenc}
+\usepackage{fouriernc}
+\usepackage{subcaption}
+\usepackage{longtable}
+\usepackage[nottoc]{tocbibind}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds}
+\usepackage{listings}
+\lstdefinelanguage{JavaScript}{
+  keywords={break, case, catch, continue, debugger, default, delete, do, else, finally, for, function, if, in, instanceof, new, return, switch, this, throw, try, typeof, var, void, while, with, let, const, async, await},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]",
+  sensitive=true
+}
+\lstset{
+  basicstyle=\footnotesize\ttfamily,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{black!3},
+  keywordstyle=\color{blue!80!black}\bfseries,
+  commentstyle=\color{green!50!black}\itshape,
+  stringstyle=\color{orange!80!black}
+}
+\usepackage{verbatim}
+\usepackage[a4paper, top=27mm, bottom=27mm, left=36mm, right=32mm]{geometry}
+\sloppy
+
+% ── GLOBAL CONSISTENCY SETTINGS ──────────────────────────────────
+\usepackage{fancyvrb}
+\RecustomVerbatimEnvironment{verbatim}{Verbatim}{fontsize=\small}
+\usepackage[font={small,it},labelfont={bf,small}]{caption}
+\renewcommand{\arraystretch}{1.1}
+\setlength{\parskip}{0.3em}
+\setlength{\parindent}{0pt}
+\usepackage{etoolbox}
+\AtBeginEnvironment{tabular}{\footnotesize}
+\AtBeginEnvironment{tabular*}{\footnotesize}
+\AtBeginEnvironment{longtable}{\footnotesize}
+\widowpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
+
+\begin{document}
+\pagenumbering{roman}
+
+% ── TITLE PAGE ────────────────────────────────────────────────────
+\begin{titlepage}
+    \centering
+    \vspace*{\baselineskip}
+    \vspace{0.75\baselineskip}
+
+    {\LARGE \textbf{GRODEALZ: AN AI-POWERED MULTI-STORE GROCERY BASKET OPTIMIZER AND MERCHANT QUOTATION PLATFORM}}
+
+    \vspace{1.5\baselineskip}
+
+    A project report submitted in partial fulfilment for the course\\
+    \textbf{Project - II (CS4202)}
+
+    \vspace*{4\baselineskip}
+
+    Submitted By
+
+    \vspace{0.5\baselineskip}
+
+    {\scshape\Large PRINCE KUMAR DUBEY \\ Roll No: 230101081 \\ Semester - VII}
+
+    \vspace{1.5\baselineskip}
+
+    Under the Supervision of
+
+    \vspace{0.5\baselineskip}
+
+    {\scshape\Large DR. KISHORJIT NONGMEIKAPAM \\ Associate Professor}
+
+    \vspace{0.5\baselineskip}
+
+    \vfill
+
+    \begin{center}
+        \includegraphics[width=4.5cm]{figures/iiit_manipur.png}
+    \end{center}
+
+    {\scshape\small Department of Computer Science and Engineering\\
+    Indian Institute of Information Technology Senapati, Manipur \\ November, 2026}
+
+\end{titlepage}
+
+% ── DECLARATION ───────────────────────────────────────────────────
+\begin{center}
+    {\LARGE \textbf{Declaration}}
+\end{center}
+\vspace{1cm}
+
+I hereby declare that the work presented in this project report entitled \textbf{``GRODEALZ: AN AI-POWERED MULTI-STORE GROCERY BASKET OPTIMIZER AND MERCHANT QUOTATION PLATFORM''} is my own bonafide work carried out under the supervision of \textbf{Dr. Kishorjit Nongmeikapam}, Associate Professor, Department of Computer Science and Engineering, Indian Institute of Information Technology Senapati, Manipur.
+
+I have strictly adhered to the principles of academic honesty and integrity. I have properly referenced and cited all ideas, methodologies, and source materials borrowed from external publications, open-source libraries, or online documents. No part of this report has been plagiarised or submitted anywhere else for the award of any other degree or diploma.
+
+\vspace{2cm}
+\begin{flushright}
+\textbf{PRINCE KUMAR DUBEY}\\
+Roll No: 230101081\\
+Department of Computer Science and Engineering\\
+IIIT Senapati, Manipur\\
+Date: November, 2026
+\end{flushright}
+
+\newpage
+
+% ── CERTIFICATE ───────────────────────────────────────────────────
+\begin{center}
+    \thispagestyle{empty}
+
+    \begin{table}[H]
+        \centering
+        \includegraphics[scale=0.18]{figures/iiit_manipur.png}
+        \begin{tabular}{l}
+            Department of Computer Science and Engineering \\
+            Indian Institute of Information Technology Senapati, Manipur \\
+        \end{tabular}
+    \end{table}
+    \par\noindent\rule{\textwidth}{0.4pt}
+    \textbf{Dr. Kishorjit Nongmeikapam} \hfill Email: \href{mailto:kishorjit@iiitmanipur.ac.in}{kishorjit@iiitmanipur.ac.in}\\
+    Associate Professor \hfill Department of Computer Science and Engineering\\[1.5cm]
+
+    {\Huge \textbf{\emph{Certificate}}}\\[1.5cm]
+    \linespread{1.15}
+    \begin{minipage}{\textwidth}
+    \large This is to certify that the project report entitled
+    \textbf{``GRODEALZ: AN AI-POWERED MULTI-STORE GROCERY BASKET OPTIMIZER AND MERCHANT QUOTATION PLATFORM''}
+    submitted to the Department of Computer Science and Engineering, Indian Institute of
+    Information Technology Senapati, Manipur in partial fulfilment for the award of the
+    degree of \textbf{Bachelor of Technology in Computer Science and Engineering} is an
+    authentic record of bonafide work carried out by \textbf{PRINCE KUMAR DUBEY} (Roll No: \textbf{230101081}).\par
+    \vspace{0.4cm}
+    The candidate has satisfactorily completed all requirements of Project - II (CS4202), and the results presented in this report have been verified and found satisfactory.
+    \end{minipage}\\[1.8cm]
+
+    \hspace*{2.6in}\large{Signature of Supervisor}\\[0.3cm]
+    \hspace*{2.5in}\textbf{(Dr. Kishorjit Nongmeikapam)}\\[0.5cm]
+
+\end{center}
+\vspace{1cm}
+Signature of Examiner 1: ............................................ \hfill Date: ...................\\[0.6cm]
+Signature of Examiner 2: ............................................ \hfill Date: ...................\\[0.6cm]
+Signature of Examiner 3: ............................................ \hfill Date: ...................\\[0.6cm]
+Signature of Examiner 4: ............................................ \hfill Date: ...................\\
+\newpage
+
+% ── ABSTRACT ──────────────────────────────────────────────────────
+\begin{abstract}
+In today's quick-commerce market, buying groceries online comes with two major everyday frustrations. First, customers who want the best prices or have diverse shopping lists usually have to check multiple stores manually to find who has fresh stock and lower rates. Buying everything from one shop is convenient but often expensive, while splitting orders manually across two or three shops takes too much effort. Second, when people need bulk items or custom requirements---such as twenty-five kilograms of rice for a hostel with a specific budget and deadline---standard grocery apps do not allow them to simply post what they need. Instead, users are forced to search for fixed SKUs with fixed prices, while local merchants have no way to bid or offer competitive rates.
+
+To solve these problems, this project develops and implements \textbf{GroDealz}, a complete web platform built on the MERN stack (MongoDB, Express.js, React 18, Node.js) combined with a Python-based autonomous agent service. GroDealz introduces two main innovations:
+\begin{enumerate}
+    \item \textbf{Autonomous AI Grocery Shopping Agent (Module A):} Users describe their needs in plain English or Hinglish (e.g., \emph{``Party snacks and beverages for 5 people under ₹600''}). The system extracts the intent, family size, dietary constraints, and budget, queries available local stores (such as FreshMart Central, QuickBazaar, Organic Harvest, and Paona Supermarket), checks real-time stock, and builds an optimal shopping basket. It compares single-store convenience against multi-store splitting, proving real savings (for instance, saving ₹267 on a typical weekly order even after paying separate delivery fees), and provides a visual store journey audit.
+    \item \textbf{Reverse RFQ Marketplace and Merchant Quotation Engine (Module B):} Customers post shopping requests in natural language. The system extracts items, quantities, target budgets, and delivery deadlines. Nearby store owners can see open requests, verify their stock, and submit transparent, itemized line-item quotations. The quotation engine dynamically ranks competing offers according to the buyer's choice: lowest total price, fastest delivery, highest store rating, or a balanced score. Buyers can also send counter-offers, and merchants can revise their quotes. Once accepted, the system converts the quote directly into a placed order.
+\end{enumerate}
+
+In addition, GroDealz features a hybrid product recommendation engine (combining collaborative filtering, content features, and time-of-day scoring), an hourly demand forecasting cron job, real-time status updates via Socket.IO, and an AI-assisted customer support desk with automatic intent tagging and PII masking. The platform has been tested thoroughly with automated test suites and deployed on Render with a live database.
+\end{abstract}
+
+\pagebreak
+
+% ── ACKNOWLEDGEMENT ───────────────────────────────────────────────
+\begin{center}
+    {\LARGE \textbf{Acknowledgement}}
+\end{center}
+\vspace{1cm}
+
+First and foremost, I would like to express my deepest gratitude to my project supervisor, \textbf{Dr. Kishorjit Nongmeikapam}, Associate Professor, Department of Computer Science and Engineering, Indian Institute of Information Technology Senapati, Manipur, for his constant encouragement, constructive criticism, and technical guidance throughout the progress of this project. His practical suggestions regarding system architecture, algorithm design, and real-world applicability helped me shape this work into a working software system.
+
+I sincerely thank \textbf{Dr. Navanath Saharia}, Head of the Department of Computer Science and Engineering, for providing departmental facilities, infrastructure, and continuous support for student project work.
+
+I am also thankful to all faculty members and staff of the Department of CSE at IIIT Manipur for their guidance and for creating an inspiring academic environment.
+
+I want to thank my classmates and friends for testing the web application, pointing out edge cases in the user interface, and providing feedback during testing. 
+
+Finally, I express my heartfelt thanks to my parents and family for their unconditional love, moral support, and patience throughout my studies.
+
+\vspace{1.5cm}
+\begin{flushright}
+\textbf{PRINCE KUMAR DUBEY}\\
+Roll No: 230101081\\
+B.Tech CSE, Semester - VII\\
+IIIT Senapati, Manipur
+\end{flushright}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\newpage
+\chapter*{List of Abbreviations}
+\addcontentsline{toc}{chapter}{List of Abbreviations}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{p{3.2cm} p{10.2cm}}
+\textbf{AI} & Artificial Intelligence \\
+\textbf{API} & Application Programming Interface \\
+\textbf{B2C} & Business to Consumer \\
+\textbf{CF} & Collaborative Filtering \\
+\textbf{COD} & Cash on Delivery \\
+\textbf{CORS} & Cross-Origin Resource Sharing \\
+\textbf{CRM} & Customer Relationship Management \\
+\textbf{DFD} & Data Flow Diagram \\
+\textbf{ERD} & Entity-Relationship Diagram \\
+\textbf{FR / NFR} & Functional / Non-Functional Requirement \\
+\textbf{HTTP / HTTPS} & Hypertext Transfer Protocol (Secure) \\
+\textbf{JSON} & JavaScript Object Notation \\
+\textbf{JWT} & JSON Web Token \\
+\textbf{MERN} & MongoDB, Express.js, React.js, Node.js \\
+\textbf{NLP} & Natural Language Processing \\
+\textbf{ODM} & Object Document Mapper (Mongoose) \\
+\textbf{PII} & Personally Identifiable Information \\
+\textbf{REST} & Representational State Transfer \\
+\textbf{RFQ} & Request for Quotation (Reverse Marketplace) \\
+\textbf{SKU} & Stock Keeping Unit \\
+\textbf{SPA} & Single-Page Application \\
+\textbf{UI / UX} & User Interface / User Experience \\
+\textbf{URI / URL} & Uniform Resource Identifier / Locator \\
+\end{tabular}
+\end{center}
+
+% ── CHAPTERS ──────────────────────────────────────────────────────
+\pagenumbering{arabic}
+
+\chapter{Introduction}
+\input{chapters/1_Introduction}
+
+\chapter{Literature Survey}
+\input{chapters/2_Literature_Survey}
+
+\chapter{Requirement Engineering}
+\input{chapters/3_Requirement}
+
+\chapter{System Design}
+\input{chapters/4_System_Design}
+
+\chapter{Implementation}
+\input{chapters/5_Implementation}
+
+\chapter{Results and Interface Walkthrough}
+\label{ch:results}
+\input{chapters/6_Results}
+
+\chapter{Conclusion and Future Scope}
+\input{chapters/7_Conclusion}
+
+\bibliography{report}
+\bibliographystyle{plain}
+
+\end{document}

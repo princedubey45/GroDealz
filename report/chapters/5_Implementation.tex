@@ -1,0 +1,88 @@
+% ─────────────────────────────────────────────────────────────────────────────
+% CHAPTER 5: Implementation
+% ─────────────────────────────────────────────────────────────────────────────
+
+This chapter describes the implementation details of the GroDealz platform. It outlines the technology stack, walks through the core backend services, and details the frontend component architecture.
+
+\section{Technology Stack}
+
+The implementation utilizes an integrated, multi-service architecture:
+
+\begin{itemize}
+    \item \textbf{Frontend:} React 18 with functional components and hooks (\texttt{useState}, \texttt{useEffect}, \texttt{useContext}, \texttt{useMemo}). Routing is managed by React Router v6. Styling is built using custom CSS modules with dark-mode design tokens, ensuring responsive layouts without external heavyweight UI frameworks.
+    \item \textbf{Backend Core (REST and Real-Time):} Node.js runtime with Express 4 web framework. Bidirectional communication is implemented using Socket.IO v4. Background scheduled tasks (such as hourly demand forecasts) are executed via \texttt{node-cron}. Security is enforced using \texttt{bcryptjs} for password hashing, \texttt{jsonwebtoken} for token creation and validation, \texttt{cors} for origin management, and \texttt{express-rate-limit} for request throttling.
+    \item \textbf{Database and Persistence:} MongoDB Atlas cloud database managed via the Mongoose 7 Object Document Mapper (ODM). Indexes are defined on frequent query paths (such as \texttt{requestId}, \texttt{customer}, \texttt{store}, and \texttt{status}).
+    \item \textbf{Autonomous AI Agent Service:} Built using Python 3.10 with FastAPI and LangGraph. It models multi-step reasoning nodes for cross-store catalog searching and basket cost optimization.
+\end{itemize}
+
+\section{Core Backend Services}
+
+\subsection{Natural Language Requirement Parser (\texttt{rfqParser.js})}
+The requirement parser takes arbitrary customer sentences (such as \emph{``I need 25 kg basmati rice for a hostel. My budget is ₹2,500. Delivery within two days.''}) and extracts structured parameters using regular expressions and semantic fallback dictionaries:
+
+\begin{itemize}
+    \item \textbf{Budget Extraction:} Strips currency symbols (₹, Rs, INR) and comma digit separators, matching numerical patterns adjacent to budget keywords:
+\begin{lstlisting}[language=JavaScript, basicstyle=\footnotesize\ttfamily]
+const normalizedQuery = query.replace(/(\d),(\d)/g, '$1$2');
+const budgetMatch = normalizedQuery.match(
+  /(?:budget\s*(?:is|of)?\s*[:=]?\s*|under\s*|upto\s*)(?:rs\.?|inr|)?\s*(\d{2,7})/i
+);
+if (budgetMatch) {
+  result.budget = parseInt(budgetMatch[1].replace(/,/g, ''), 10);
+}
+\end{lstlisting}
+    \item \textbf{Delivery Deadline Extraction:} Scans for day counts (e.g., \emph{``within 2 days''}, \emph{``in 3 days''}) or relative terms (such as \emph{``tomorrow''} or \emph{``urgent''}) and computes the future \texttt{Date} timestamp.
+    \item \textbf{Commodity and Quantity Extraction:} Matches patterns pairing numbers with measurement units (kg, g, L, packs, pcs) and product names (such as \emph{``25 kg basmati rice''} or \emph{``2 litre mustard oil''}).
+\end{itemize}
+
+\subsection{Merchant Quotation Engine (\texttt{quotationEngine.js})}
+The quotation engine implements four primary operations:
+\begin{enumerate}
+    \item \textbf{Line-Item Validation and Calculation (\texttt{validateAndCalculateQuote}):} Ensures every quoted item has a non-negative unit price and valid quantity, calculating exact line totals, subtotal, and grand total:
+\begin{lstlisting}[language=JavaScript, basicstyle=\footnotesize\ttfamily]
+const lineTotal = Math.round(qty * unitPrice * 100) / 100;
+const itemsSubtotal = calculatedItems.reduce((acc, it) => acc + it.lineTotal, 0);
+const grandTotal = itemsSubtotal + deliveryCharge + tax;
+\end{lstlisting}
+    \item \textbf{Dynamic Multi-Criteria Ranking (\texttt{rankQuotations}):} Computes ranking scores according to the customer's selected priority (\texttt{lowest\_price}, \texttt{fastest\_delivery}, \texttt{highest\_rated}, or \texttt{balanced}), assigning intuitive badges to top-ranking bids.
+    \item \textbf{Counter-Offer and Revision Handlers:} Manages negotiation state. When a customer counters, the quote is flagged as \texttt{customer\_countered}. When a merchant revises, the previous version is archived in \texttt{revisionHistory} and new totals are calculated.
+    \item \textbf{Atomic Conversion to Order (\texttt{acceptQuotationAndCreateOrder}):} Verifies quote expiration, marks the selected quote as \texttt{accepted}, rejects competing bids, creates a confirmed \texttt{Order} document, and links the order ID to the original \texttt{BuyerRequest}.
+\end{enumerate}
+
+\subsection{Hybrid Recommendation Subsystem}
+The recommendation service in \texttt{backend/routes/recommendations.js} calculates scores using a three-tier model:
+\begin{enumerate}
+    \item \textbf{Collaborative Filtering:} Computes cosine similarity between user interaction history vectors. If a user is new (cold-start), the engine falls back to trending items sorted by total order count.
+    \item \textbf{Content-Based Scoring:} Evaluates 16-dimensional feature vectors representing product categories, dietary tags, and price points.
+    \item \textbf{Context-Aware Scoring:} Analyzes local time of day to apply category multipliers (+0.10 for Dairy and Bakery in morning hours; +0.12 for Vegetables and Staples in evening hours).
+\end{enumerate}
+
+\subsection{Automated Demand Prediction}
+Implemented in \texttt{backend/ai/demandPrediction.js}, an automated \texttt{node-cron} job triggers hourly. It aggregates past order volumes over a rolling 168-hour window, applies single exponential smoothing ($\alpha = 0.4$), computes moving-average trend direction, and calculates multivariate regression to output predicted demand scores and staffing recommendations.
+
+\section{Frontend Architecture and Components}
+
+The user interface is organized into modular pages located in \texttt{frontend/src/pages/}:
+
+\subsection{Customer Shopping Requirements Page (\texttt{BuyerRFQ.js})}
+\begin{itemize}
+    \item \textbf{Prompt Input with AI Extractor:} Features an interactive input box with a 1-click example loader (\emph{``I need 25 kg basmati rice for a hostel...''}). Clicking \emph{``Extract with AI Parser''} calls the backend API and auto-fills the line-item table.
+    \item \textbf{Structured Line-Item Editor:} Allows users to add, edit, or delete items, specify units, and record preferred brands.
+    \item \textbf{Offer Comparison Matrix:} Displays competing merchant cards side-by-side. Users can switch ranking priorities dynamically with one click, expand line-item breakdowns to view unit prices, propose counter-offers, or accept the winning quote to generate an immediate order.
+\end{itemize}
+
+\subsection{Merchant Quotation Dashboard (\texttt{MerchantRFQ.js})}
+\begin{itemize}
+    \item \textbf{Open Buyer Requests Feed:} Displays open nearby requests with item details, delivery location, deadline countdown, and budget visibility indicator.
+    \item \textbf{Itemized Quotation Modal:} Pre-fills requested items so the merchant can enter individual unit prices, set delivery fees and taxes, confirm inventory stock, choose delivery dates, and set quote validity periods.
+    \item \textbf{My Bids and Counter Negotiation View:} Highlights active bids. When a customer sends a counter-offer, an amber alert banner displays the proposed price and note, with a 1-click option to revise the quotation.
+\end{itemize}
+
+\subsection{Autonomous AI Grocery Planner (\texttt{AIGroceryPlanner.js})}
+Provides the conversational grocery interface with parameter chips (Family Size, Duration, Budget, Diet, Goal), a visual Store Journey Audit showing the picking route, and a comparative savings banner highlighting the multi-store net advantage over single-store purchases.
+
+\subsection{Customer Support CRM (\texttt{Support.js})}
+Allows customers to create tickets with an optional PII masking toggle. It features automated intent classification, AI confidence percentage ratings, CRM tracking identifiers, and a live chat panel.
+
+\subsection{Homepage and Product Catalog (\texttt{Home.js} and \texttt{Products.js})}
+Presents the full grocery catalog with category pills, live search, freshness badges, and personalized recommendation rails.

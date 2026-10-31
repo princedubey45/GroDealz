@@ -1,0 +1,91 @@
+% ─────────────────────────────────────────────────────────────────────────────
+% CHAPTER 2: Literature Survey
+% ─────────────────────────────────────────────────────────────────────────────
+
+This chapter reviews relevant academic literature, commercial systems, and existing technical approaches related to online grocery platforms, recommendation systems, demand forecasting, autonomous agents, and reverse auction marketplaces.
+
+\section{Evolution of Online Grocery and Quick-Commerce}
+
+In recent years, the online grocery market has shifted from scheduled next-day deliveries (such as traditional BigBasket or Amazon Fresh) toward hyper-local quick-commerce platforms like Blinkit, Zepto, and Swiggy Instamart. These platforms rely on geographically distributed micro-warehouses called ``dark stores,'' each holding between two thousand and four thousand common stock-keeping units (SKUs) located within a three-kilometer radius of urban neighborhoods.
+
+While this model achieves very low delivery times, studies on retail logistics note several structural constraints:
+\begin{itemize}
+    \item \textbf{Inventory Limitations:} A single dark store cannot maintain the variety of items found across an entire city or district. When niche brands, bulk bags, or seasonal local produce are needed, the customer faces out-of-stock messages.
+    \item \textbf{Pricing Inflexibility:} Prices in centralized dark stores are determined by algorithmic markup rules with no room for buyer negotiation or local merchant competition.
+    \item \textbf{Exclusion of Local Neighborhood Shops:} Independent local merchants, who often possess superior connections with regional farmers and wholesale grain markets, are largely excluded from modern quick-commerce infrastructure.
+\end{itemize}
+
+\section{Recommendation Systems in Retail}
+
+Personalized product recommendation is widely recognized as a primary driver of customer retention in e-commerce.
+
+\subsection{Collaborative Filtering}
+Collaborative filtering (CF), introduced formally by Resnick et al.~\cite{resnick1994grouplens} and expanded by Sarwar et al.~\cite{sarwar2001item}, predicts user preferences by identifying patterns among similar users or items. In item-based CF, the similarity between two items $i$ and $j$ is computed across the user rating vector using the cosine similarity metric:
+\begin{equation}
+    \text{sim}(i, j) = \frac{\sum_{u \in U} R_{u,i} \cdot R_{u,j}}{\sqrt{\sum_{u \in U} R_{u,i}^2} \cdot \sqrt{\sum_{u \in U} R_{u,j}^2}}
+\end{equation}
+While collaborative filtering works well when substantial interaction data is available, it suffers from the well-documented \emph{cold-start problem}: when a new product is added or a new customer signs up, there are no prior interactions, causing collaborative filtering alone to fail.
+
+\subsection{Content-Based Filtering}
+Content-based filtering, discussed by Pazzani and Billsus~\cite{pazzani2007content}, avoids the cold-start problem by analyzing product features directly (such as category, brand, dietary attributes, and price tier). A user profile vector is constructed from the attributes of items the user has previously interacted with, and candidate products are scored by vector similarity. However, content-based methods tend to suffer from \emph{overspecialization}, repeatedly recommending items very similar to what the user already purchased.
+
+\subsection{Hybrid Approaches}
+Burke~\cite{burke2002hybrid} showed that combining collaborative and content-based approaches in an ensemble overcomes the individual weaknesses of both methods. In GroDealz, we implement a weighted hybrid ensemble that also incorporates contextual signals, such as the time of day (e.g., boosting milk and bakery products in the morning, and dinner vegetables and rice in the evening).
+
+\section{Demand Forecasting in Perishable Retail}
+
+Accurate demand prediction is essential for grocery stores because fresh items like vegetables, fruits, and dairy have very short shelf lives. Overstocking causes food spoilage and financial loss, while understocking leads to lost sales and disappointed customers.
+
+Classic time-series methods such as the Box-Jenkins ARIMA models~\cite{box2015time} require stationary data and significant computational overhead. For hyper-local stores operating on standard web servers, simpler lightweight techniques are often more practical:
+\begin{itemize}
+    \item \textbf{Exponential Smoothing:} Gives exponentially decreasing weights to older observations, allowing recent order bursts to adjust the forecast quickly.
+    \item \textbf{Moving Average Trend:} Tracks baseline demand over a multi-day rolling window to capture underlying weekly cycles.
+    \item \textbf{Multivariate Linear Regression:} Relates order volume directly to calendar features such as hour of the day, day of the week, and weekend indicators.
+\end{itemize}
+Armstrong~\cite{armstrong2001combining} established that combining separate forecasting models into an ensemble frequently outperforms individual models. GroDealz adopts this insight by averaging exponential smoothing with linear regression to generate hourly per-product demand forecasts.
+
+\section{Autonomous Agents and Multi-Step Task Execution}
+
+Recent advances in Large Language Models (LLMs) and agentic frameworks, such as LangChain and LangGraph, have enabled AI systems to move beyond simple question answering toward autonomous multi-step reasoning. Instead of treating customer queries as isolated text, an agent can:
+\begin{enumerate}
+    \item Parse an informal request into structured operational parameters (e.g., family size, duration, dietary preference, target budget).
+    \item Query multiple external APIs or database tools to inspect stock levels and unit prices across different vendor locations.
+    \item Optimize combinations of items using multi-criteria cost functions.
+    \item Maintain execution state across decision nodes and output verifiable, structured plans.
+\end{enumerate}
+In this project, an autonomous agent pipeline evaluates cross-store inventory, solves the multi-store versus single-store basket tradeoff, and produces an audited picking itinerary.
+
+\section{Reverse Auctions and Request for Quotation (RFQ) Systems}
+
+In traditional forward e-commerce, the seller sets a price and the buyer decides whether to buy. In a reverse auction or Request for Quotation (RFQ) system, the relationship is inverted: the customer defines what they want, and multiple competing suppliers submit bids to win the customer's business.
+
+Reverse auctions are widely used in enterprise procurement, government tenders, and business-to-business (B2B) supply chains. However, consumer-facing quick-commerce platforms have rarely adopted reverse bidding. When customers need bulk staples (such as 25~kg of basmati rice for a student hostel or event catering), standard retail interfaces become inefficient. Allowing nearby independent merchants to submit transparent, itemized line-item quotations introduces healthy local price competition and transparency.
+
+\section{Comparative Summary}
+
+Table~\ref{tab:lit_comparison} highlights how GroDealz compares with standard existing platforms across essential functional areas.
+
+\begin{table}[H]
+\centering
+\caption{Comparison of GroDealz with Existing Grocery Delivery Approaches}
+\label{tab:lit_comparison}
+\begin{tabular}{p{3.8cm} p{3.2cm} p{3.2cm} p{3.6cm}}
+\toprule
+\textbf{Feature / Capability} & \textbf{Typical Quick-Commerce (e.g., Blinkit, Zepto)} & \textbf{Traditional E-Grocery (e.g., BigBasket)} & \textbf{GroDealz (This Project)} \\
+\midrule
+Store Model & Single Dark Store & Central Warehouse & Multi-Store Local Network \\
+\addlinespace
+Autonomous AI Planner & None (Search Only) & None (Search Only) & Natural Language Multi-Store Agent \\
+\addlinespace
+Basket Optimization & No Comparison & Single Basket & Multi-Store vs Single-Store Net Savings \\
+\addlinespace
+Reverse RFQ Marketplace & Not Supported & Not Supported & Full Itemized Merchant Bidding (Module B) \\
+\addlinespace
+Bid Ranking Modes & Fixed Price & Fixed Price & Lowest Price, Fastest Delivery, Rating, Balanced \\
+\addlinespace
+Live Store Journey Audit & None & None & Visual Picking Audit and Savings Proof \\
+\addlinespace
+Real-Time Tracking & Polling / SMS & Delivery Window & Live WebSockets (Socket.IO) \\
+\bottomrule
+\end{tabular}
+\end{table}
