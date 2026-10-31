@@ -211,10 +211,25 @@ async function processAgentShoppingRequest(query = '', userPreferences = {}) {
     productFilter['dietary.isVegan'] = true;
   }
 
-  const [dbProducts, stores] = await Promise.all([
+  let [dbProducts, stores] = await Promise.all([
     Product.find(productFilter).populate('store', 'name location emoji hours ratings deliveryRadius').lean(),
     Store.find({ isActive: true }).lean()
   ]);
+
+  // If connected database lacks essential grocery staples, auto-seed them on the fly
+  const hasStaples = dbProducts && dbProducts.some(p => /rice|tomato|potato|milk|atta|dal/i.test(p.name));
+  if (!hasStaples || dbProducts.length < 5) {
+    try {
+      const { ensureGroceryCatalog } = require('../services/catalogSeeder');
+      await ensureGroceryCatalog(true);
+      [dbProducts, stores] = await Promise.all([
+        Product.find(productFilter).populate('store', 'name location emoji hours ratings deliveryRadius').lean(),
+        Store.find({ isActive: true }).lean()
+      ]);
+    } catch (err) {
+      console.warn('Auto-seed fallback warning in shoppingAgent:', err.message);
+    }
+  }
 
   if (!dbProducts || dbProducts.length === 0) {
     return {

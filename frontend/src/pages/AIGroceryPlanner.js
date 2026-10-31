@@ -767,49 +767,115 @@ export default function AIGroceryPlanner() {
             <div>
               {activeStrategy === 'multiStore' ? (
                 // Multi-Store Grouped View
-                agentData.strategies.multiStore.stores.map((group, sIdx) => (
-                  <div key={sIdx} className={styles.shopGroup}>
-                    <div className={styles.shopHeader}>
-                      <div className={styles.shopBadge}>
-                        <span className={styles.shopEmoji}>{group.store.emoji}</span>
+                agentData.strategies.multiStore.stores.length > 0 ? (
+                  agentData.strategies.multiStore.stores.map((group, sIdx) => (
+                    <div key={sIdx} className={styles.shopGroup}>
+                      <div className={styles.shopHeader}>
+                        <div className={styles.shopBadge}>
+                          <span className={styles.shopEmoji}>{group.store.emoji}</span>
+                          <div>
+                            <div className={styles.shopName}>{group.store.name}</div>
+                            <div className={styles.shopArea}>📍 {group.store.area} • ⭐ {group.store.rating}</div>
+                          </div>
+                        </div>
                         <div>
-                          <div className={styles.shopName}>{group.store.name}</div>
-                          <div className={styles.shopArea}>📍 {group.store.area} • ⭐ {group.store.rating}</div>
+                          <div className={styles.shopSubtotal}>Subtotal: ₹{group.subtotal}</div>
+                          <div style={{ fontSize: '0.78rem', color: '#94a3b8', textAlign: 'right' }}>
+                            + ₹{group.deliveryFee} delivery
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <div className={styles.shopSubtotal}>Subtotal: ₹{group.subtotal}</div>
-                        <div style={{ fontSize: '0.78rem', color: '#94a3b8', textAlign: 'right' }}>
-                          + ₹{group.deliveryFee} delivery
+
+                      <div className={styles.itemsList}>
+                        {group.items.map((item, iIdx) => (
+                          <div key={iIdx} className={styles.basketItem}>
+                            <div className={styles.itemLeft}>
+                              <span className={styles.itemEmoji}>{item.emoji}</span>
+                              <div>
+                                <div className={styles.itemName}>
+                                  {item.name} <span className={styles.itemUnit}>· {item.quantity} ({item.unit})</span>
+                                  <span style={{
+                                    background: 'rgba(16, 185, 129, 0.12)',
+                                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                                    color: '#10b981',
+                                    fontSize: '0.72rem',
+                                    fontWeight: '700',
+                                    padding: '2px 8px',
+                                    borderRadius: '4px',
+                                    marginLeft: '8px',
+                                    display: 'inline-block'
+                                  }}>
+                                    🏪 Sourced at Stop #{sIdx + 1}
+                                  </span>
+                                </div>
+                                <div className={styles.itemRationale}>
+                                  ✨ {item.rationale}
+                                </div>
+                              </div>
+                            </div>
+                            <div className={styles.itemRight}>
+                              <div className={styles.itemPrice}>₹{item.lineTotal}</div>
+                              <div className={styles.unitRate}>₹{item.price} / unit</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.shopGroup} style={{ padding: '36px 20px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🏪</div>
+                    <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>No Active Grocery Inventory Found</h3>
+                    <p style={{ color: '#94a3b8', maxWidth: '440px', margin: '0 auto 16px auto', lineHeight: 1.5, fontSize: '0.9rem' }}>
+                      The stores connected to your database don't currently have active grocery items (Rice, Milk, Produce). Click below to initialize partner stores & verified stock.
+                    </p>
+                    <button
+                      className={styles.btnPrimary}
+                      style={{ margin: '0 auto' }}
+                      onClick={async () => {
+                        setLoading(true);
+                        setNotification('🌱 Initializing partner grocery stores & catalogue...');
+                        try {
+                          await api.get('/seed');
+                          await handleRunAgent(query);
+                        } catch (e) {
+                          setNotification('⚠️ Seeding error: ' + (e.response?.data?.error || e.message));
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                    >
+                      🌱 Initialize Partner Grocery Catalogue
+                    </button>
+                  </div>
+                )
+              ) : (
+                // Single Store View
+                agentData.strategies.singleStore?.items?.length > 0 ? (
+                  <div className={styles.shopGroup}>
+                    <div className={styles.shopHeader}>
+                      <div className={styles.shopBadge}>
+                        <span className={styles.shopEmoji}>{agentData.strategies.singleStore.store?.emoji}</span>
+                        <div>
+                          <div className={styles.shopName}>{agentData.strategies.singleStore.store?.name}</div>
+                          <div className={styles.shopArea}>📍 {agentData.strategies.singleStore.store?.area} • Single Delivery</div>
                         </div>
+                      </div>
+                      <div className={styles.shopSubtotal}>
+                        Subtotal: ₹{agentData.strategies.singleStore.itemsSubtotal}
                       </div>
                     </div>
 
                     <div className={styles.itemsList}>
-                      {group.items.map((item, iIdx) => (
+                      {agentData.strategies.singleStore.items.map((item, iIdx) => (
                         <div key={iIdx} className={styles.basketItem}>
                           <div className={styles.itemLeft}>
                             <span className={styles.itemEmoji}>{item.emoji}</span>
                             <div>
                               <div className={styles.itemName}>
                                 {item.name} <span className={styles.itemUnit}>· {item.quantity} ({item.unit})</span>
-                                <span style={{
-                                  background: 'rgba(16, 185, 129, 0.12)',
-                                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                                  color: '#10b981',
-                                  fontSize: '0.72rem',
-                                  fontWeight: '700',
-                                  padding: '2px 8px',
-                                  borderRadius: '4px',
-                                  marginLeft: '8px',
-                                  display: 'inline-block'
-                                }}>
-                                  🏪 Sourced at Stop #{sIdx + 1}
-                                </span>
                               </div>
-                              <div className={styles.itemRationale}>
-                                ✨ {item.rationale}
-                              </div>
+                              <div className={styles.itemRationale}>✨ {item.rationale}</div>
                             </div>
                           </div>
                           <div className={styles.itemRight}>
@@ -820,43 +886,15 @@ export default function AIGroceryPlanner() {
                       ))}
                     </div>
                   </div>
-                ))
-              ) : (
-                // Single Store View
-                <div className={styles.shopGroup}>
-                  <div className={styles.shopHeader}>
-                    <div className={styles.shopBadge}>
-                      <span className={styles.shopEmoji}>{agentData.strategies.singleStore.store?.emoji}</span>
-                      <div>
-                        <div className={styles.shopName}>{agentData.strategies.singleStore.store?.name}</div>
-                        <div className={styles.shopArea}>📍 {agentData.strategies.singleStore.store?.area} • Single Delivery</div>
-                      </div>
-                    </div>
-                    <div className={styles.shopSubtotal}>
-                      Subtotal: ₹{agentData.strategies.singleStore.itemsSubtotal}
-                    </div>
+                ) : (
+                  <div className={styles.shopGroup} style={{ padding: '36px 20px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🏪</div>
+                    <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>No Single-Store Fulfillment Available</h3>
+                    <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
+                      No single store currently stocks all required items. Switch to Multi-Store Value to source across partner shops.
+                    </p>
                   </div>
-
-                  <div className={styles.itemsList}>
-                    {agentData.strategies.singleStore.items.map((item, iIdx) => (
-                      <div key={iIdx} className={styles.basketItem}>
-                        <div className={styles.itemLeft}>
-                          <span className={styles.itemEmoji}>{item.emoji}</span>
-                          <div>
-                            <div className={styles.itemName}>
-                              {item.name} <span className={styles.itemUnit}>· {item.quantity} ({item.unit})</span>
-                            </div>
-                            <div className={styles.itemRationale}>✨ {item.rationale}</div>
-                          </div>
-                        </div>
-                        <div className={styles.itemRight}>
-                          <div className={styles.itemPrice}>₹{item.lineTotal}</div>
-                          <div className={styles.unitRate}>₹{item.price} / unit</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                )
               )}
             </div>
 

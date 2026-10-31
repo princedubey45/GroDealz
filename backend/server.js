@@ -73,7 +73,19 @@ app.use('/api/payment',         paymentRoutes);
 app.use('/api/agent-bridge',    agentBridgeRoutes);
 app.use('/api/proposals',       proposalRoutes);
 
+const { ensureGroceryCatalog } = require('./services/catalogSeeder');
+
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date() }));
+
+// Admin / fallback route to seed/verify grocery catalog
+app.all('/api/seed', async (_req, res) => {
+  try {
+    const result = await ensureGroceryCatalog(true);
+    res.json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // ─── SERVE FRONTEND (SPA) ───────────────────────────────────────────────────
 const frontendBuildPath = path.join(__dirname, '../frontend/build');
@@ -196,8 +208,9 @@ const connectWithRetry = () => {
     serverSelectionTimeoutMS: 5000,
     family: 4
   })
-    .then(() => {
+    .then(async () => {
       console.log('✅ MongoDB connected successfully');
+      await ensureGroceryCatalog();
     })
     .catch(err => {
       console.error('❌ MongoDB connection error:', err.message);
