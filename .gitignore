@@ -3,3 +3,12 @@ frontend/node_modules/
 backend/test_openai.js
 backend/test_openai2.js
 .DS_Store
+.venv/
+ai-agent/.venv/
+__pycache__/
+*.pyc
+*.pyo
+ai-agent/.env
+*.local
+.env.local
+backend/.env.local

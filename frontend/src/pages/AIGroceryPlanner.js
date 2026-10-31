@@ -27,6 +27,13 @@ export default function AIGroceryPlanner() {
   const [ordering, setOrdering] = useState(false);
   const [notification, setNotification] = useState('');
 
+  // Milestone 3: Approval System States
+  const [proposal, setProposal] = useState(null);
+  const [revalidating, setRevalidating] = useState(false);
+  const [revalidateResult, setRevalidateResult] = useState(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+
   // Load Razorpay checkout script
   useEffect(() => {
     const script = document.createElement('script');
@@ -34,6 +41,43 @@ export default function AIGroceryPlanner() {
     script.async = true;
     document.body.appendChild(script);
   }, []);
+
+  // Pre-flight stock & price revalidation
+  const runRevalidation = async (propId) => {
+    if (!propId) return;
+    setRevalidating(true);
+    try {
+      const res = await api.post(`/proposals/${propId}/revalidate`);
+      if (res.data?.success) {
+        setRevalidateResult(res.data);
+      }
+    } catch (e) {
+      console.error('Revalidation error:', e);
+    } finally {
+      setRevalidating(false);
+    }
+  };
+
+  // Create persistent proposal in MongoDB
+  const createOrUpdateProposal = async (data, stratKey) => {
+    const stratData = data?.strategies?.[stratKey];
+    if (!stratData) return;
+    try {
+      const res = await api.post('/proposals', {
+        query,
+        requirements: data.summary || {},
+        selectedStrategy: stratKey,
+        strategyData: stratData,
+        allStrategies: data.strategies
+      });
+      if (res.data?.success && res.data?.proposal) {
+        setProposal(res.data.proposal);
+        runRevalidation(res.data.proposal.proposalId);
+      }
+    } catch (e) {
+      // Guest or offline fallback
+    }
+  };
 
   // Fetch AI shopping agent recommendations
   const handleRunAgent = async (promptText = query) => {
@@ -44,6 +88,7 @@ export default function AIGroceryPlanner() {
       const res = await api.post('/ai/shopping-agent', { query: promptText });
       if (res.data?.success) {
         setAgentData(res.data);
+        createOrUpdateProposal(res.data, activeStrategy);
       }
     } catch (err) {
       console.error('Agent generation failed:', err);
@@ -56,6 +101,13 @@ export default function AIGroceryPlanner() {
   useEffect(() => {
     handleRunAgent(PRESETS[0]);
   }, []);
+
+  // When active strategy changes, update persistent proposal
+  useEffect(() => {
+    if (agentData?.strategies?.[activeStrategy]) {
+      createOrUpdateProposal(agentData, activeStrategy);
+    }
+  }, [activeStrategy]);
 
   const currentStrategyData = agentData?.strategies?.[activeStrategy];
 
@@ -139,6 +191,61 @@ export default function AIGroceryPlanner() {
       setNotification(`⚠️ Checkout error: ${err.response?.data?.message || err.message}`);
     } finally {
       setOrdering(false);
+    }
+  };
+
+  // Customer Human-in-the-Loop Approval (Pre-flight verify + SHA-256 seal)
+  const handleCustomerApprove = async () => {
+    if (!currentStrategyData) return;
+
+    if (!proposal) {
+      // Direct checkout for guest
+      await handleApproveAndCheckout();
+      return;
+    }
+
+    setOrdering(true);
+    setNotification('');
+
+    try {
+      const approveRes = await api.post(`/proposals/${proposal.proposalId}/approve`);
+      if (approveRes.data?.success) {
+        setProposal(prev => ({
+          ...prev,
+          status: 'approved',
+          approvalRecord: approveRes.data.approvalRecord
+        }));
+        const hashShort = approveRes.data.approvalRecord?.snapshotHash?.slice(0, 10);
+        setNotification(`🔒 Proposal approved & cryptographically sealed! (SHA-256: ${hashShort}...)`);
+        
+        // Proceed to multi-store order checkout
+        await handleApproveAndCheckout();
+      }
+    } catch (err) {
+      setNotification(`⚠️ Approval check: ${err.response?.data?.message || err.message}`);
+      setOrdering(false);
+    }
+  };
+
+  // Rejection with tweak suggestions
+  const handleRejectProposal = async () => {
+    if (!proposal) {
+      setShowRejectModal(false);
+      return;
+    }
+
+    try {
+      await api.post(`/proposals/${proposal.proposalId}/reject`, {
+        reason: rejectReason || 'Customer requested adjustments'
+      });
+      setShowRejectModal(false);
+      setNotification('Plan rejected. Re-optimizing AI basket with your adjustments...');
+      const updatedPrompt = `${query}. Adjustment: ${rejectReason || 'Adjust choices'}`;
+      setQuery(updatedPrompt);
+      setRejectReason('');
+      handleRunAgent(updatedPrompt);
+    } catch (e) {
+      setShowRejectModal(false);
     }
   };
 
@@ -437,15 +544,55 @@ export default function AIGroceryPlanner() {
                   </div>
                 </div>
 
+                {/* Milestone 3: Human-in-the-Loop Approval & Cryptographic Audit Card */}
+                {proposal && (
+                  <div className={styles.approvalAuditCard}>
+                    <div className={styles.approvalHeader}>
+                      <span className={styles.proposalIdTag}>📋 {proposal.proposalId}</span>
+                      <span className={`${styles.approvalStatusBadge} ${proposal.status === 'approved' ? styles.statusApproved : styles.statusPending}`}>
+                        {proposal.status === 'approved' ? '✓ Approved' : 'Pending Review'}
+                      </span>
+                    </div>
+
+                    {/* Live Pre-flight Revalidation Indicator */}
+                    {revalidating ? (
+                      <div className={styles.revalidateBanner}>🔄 Re-validating live catalog & stock...</div>
+                    ) : revalidateResult ? (
+                      <div className={`${styles.revalidateBanner} ${revalidateResult.canApprove ? styles.revalidateOk : styles.revalidateWarn}`}>
+                        {revalidateResult.canApprove
+                          ? '✓ Pre-flight Verified: All items active & in stock'
+                          : '⚠️ Discrepancy: Some items went out of stock'}
+                      </div>
+                    ) : null}
+
+                    {/* SHA-256 Cryptographic Snapshot Hash */}
+                    {proposal.approvalRecord?.snapshotHash ? (
+                      <div className={styles.auditHashSnippet}>
+                        🔒 <strong>SHA-256 Audit Seal:</strong> {proposal.approvalRecord.snapshotHash}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '6px' }}>
+                        🛡️ Approving generates an immutable SHA-256 audit record to lock prices.
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className={styles.checkoutActions}>
                   <button
                     className={styles.btnCheckout}
-                    onClick={handleApproveAndCheckout}
-                    disabled={ordering}
+                    onClick={handleCustomerApprove}
+                    disabled={ordering || (revalidateResult && !revalidateResult.canApprove)}
                   >
-                    {ordering ? 'Placing Orders...' : '⚡ Customer-Approved Checkout'}
+                    {ordering ? 'Processing...' : (proposal?.status === 'approved' ? '⚡ Proceed to Payment' : '✓ Approve Plan & Checkout')}
                   </button>
+
+                  {proposal?.status !== 'approved' && (
+                    <button className={styles.btnReject} onClick={() => setShowRejectModal(true)}>
+                      ✕ Reject / Request Adjustments
+                    </button>
+                  )}
 
                   <button className={styles.btnCart} onClick={handleAddToCart}>
                     🛒 Add Basket to Cart
@@ -462,6 +609,48 @@ export default function AIGroceryPlanner() {
       ) : (
         <div className={styles.emptyState}>
           <p>Type what you need above and click "Optimize Basket".</p>
+        </div>
+      )}
+
+      {/* Milestone 3: Rejection & Tweak Modal */}
+      {showRejectModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>Tweak Shopping Plan</h3>
+            <p style={{ color: '#94a3b8', fontSize: '0.88rem', marginBottom: '14px' }}>
+              Tell the AI what you'd like adjusted (e.g. "Prefer organic milk", "Lower budget to ₹1,200"):
+            </p>
+            <textarea
+              style={{
+                width: '100%',
+                background: 'rgba(15, 23, 42, 0.8)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '10px',
+                color: '#f8fafc',
+                padding: '10px',
+                minHeight: '80px',
+                marginBottom: '14px',
+                fontSize: '0.9rem'
+              }}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter adjustment instructions..."
+            />
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '8px 14px' }}
+                onClick={() => setShowRejectModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                style={{ background: '#ef4444', border: 'none', color: '#fff', borderRadius: '8px', padding: '8px 16px', fontWeight: '700', cursor: 'pointer' }}
+                onClick={handleRejectProposal}
+              >
+                Submit & Re-Plan
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

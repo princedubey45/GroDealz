@@ -12,6 +12,8 @@ const orderItemSchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema({
   orderId:   { type: String, unique: true }, // e.g. GRD-20240001
   groupId:   { type: String, index: true },  // e.g. GRD-GRP-20261029-XXXX (links multi-store orders)
+  proposalId: { type: String, index: true }, // e.g. PRP-20261031-XXXX
+  idempotencyKey: { type: String, index: true },
   isGroupOrder: { type: Boolean, default: false },
   groupSummary: {
     totalStores: Number,

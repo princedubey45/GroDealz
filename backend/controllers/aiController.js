@@ -152,12 +152,48 @@ async function validateBasket(req, res) {
 }
 
 const { processAgentShoppingRequest } = require('../ai/shoppingAgent');
+const AI_AGENT_SERVICE_URL = process.env.AI_AGENT_SERVICE_URL || 'http://127.0.0.1:8000';
 
 async function shoppingAgent(req, res) {
   try {
     const query = req.body.query || req.body.message || '';
     const userPrefs = req.body.preferences || req.user?.profile?.preferences || {};
-    const result = await processAgentShoppingRequest(query, userPrefs);
+
+    let result = null;
+
+    // 1. Try calling the Python LangGraph Agent service
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000); // 4-sec timeout
+
+      const agentRes = await fetch(`${AI_AGENT_SERVICE_URL}/agent/plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, preferences: userPrefs }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (agentRes.ok) {
+        const agentData = await agentRes.json();
+        if (agentData?.success && agentData?.requirements) {
+          // Fall back to in-process optimizer to build full strategy baskets from discovered candidates
+          result = await processAgentShoppingRequest(query, {
+            ...userPrefs,
+            extractedRequirements: agentData.requirements
+          });
+          result.orchestrator = 'Python-LangGraph';
+        }
+      }
+    } catch (pyErr) {
+      // Python agent not running or timed out; seamless local fallback
+    }
+
+    // 2. Fallback to in-process agent engine if Python agent did not respond
+    if (!result) {
+      result = await processAgentShoppingRequest(query, userPrefs);
+      result.orchestrator = 'Node-Core';
+    }
 
     // Verify basket safety: ensure every product exists in MongoDB and stock is valid
     if (result.success && result.strategies?.multiStore?.allItems) {

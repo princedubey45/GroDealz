@@ -116,6 +116,16 @@ exports.verifyPayment = async (req, res) => {
             total: order.pricing.total,
             itemCount: order.items.length
           });
+          if (order.groupId) {
+            io.to(`group_${order.groupId}`).emit('group_order_update', {
+              groupId: order.groupId,
+              orderId: order.orderId,
+              storeId: order.store,
+              status: order.status,
+              paymentStatus: 'paid',
+              note: 'Payment verified'
+            });
+          }
         }
       }));
 

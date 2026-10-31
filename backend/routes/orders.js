@@ -4,6 +4,7 @@ const Order   = require('../models/Order');
 const Product = require('../models/Product');
 const User    = require('../models/User');
 const Store   = require('../models/Store');
+const PurchaseProposal = require('../models/PurchaseProposal');
 const { auth, ownerOnly }  = require('../middleware/auth');
 const { recordInteraction } = require('../ai/recommendationEngine');
 
@@ -57,7 +58,32 @@ router.post('/', auth, async (req, res) => {
 // Place AI Agent Multi-Store Checkout
 router.post('/agent-checkout', auth, async (req, res) => {
   try {
-    const { items, deliveryAddress, paymentMethod, deliveryNotes } = req.body;
+    const idempotencyKey = req.headers['x-idempotency-key'] || req.body.idempotencyKey;
+    const { items, deliveryAddress, paymentMethod, deliveryNotes, proposalId } = req.body;
+
+    // 1. Idempotency Check: if this key has already processed, return existing order set immediately
+    if (idempotencyKey) {
+      const existingOrders = await Order.find({ idempotencyKey, customer: req.user._id })
+        .populate('store', 'name emoji location')
+        .populate('items.product', 'name emoji price unit');
+
+      if (existingOrders.length > 0) {
+        const overallSubtotal = existingOrders.reduce((s, o) => s + (o.pricing?.subtotal || 0), 0);
+        const overallDeliveryFee = existingOrders.reduce((s, o) => s + (o.pricing?.deliveryFee || 0), 0);
+        const overallTotal = existingOrders.reduce((s, o) => s + (o.pricing?.total || 0), 0);
+        return res.json({
+          success: true,
+          isIdempotentReplay: true,
+          groupId: existingOrders[0].groupId,
+          isMultiStore: existingOrders.length > 1,
+          totalStores: existingOrders.length,
+          overallSubtotal,
+          overallDeliveryFee,
+          overallTotal,
+          orders: existingOrders
+        });
+      }
+    }
 
     if (!items || !items.length) {
       return res.status(400).json({ message: 'No items provided for checkout' });
@@ -124,6 +150,8 @@ router.post('/agent-checkout', auth, async (req, res) => {
         customer: req.user._id,
         store: sId,
         groupId,
+        proposalId: proposalId || null,
+        idempotencyKey: idempotencyKey || null,
         isGroupOrder: isMultiStore,
         groupSummary: {
           totalStores: storeIds.length,
@@ -186,6 +214,20 @@ router.post('/agent-checkout', auth, async (req, res) => {
     // Update totalGroupAmount on all created orders
     await Order.updateMany({ groupId }, { $set: { 'groupSummary.totalGroupAmount': overallTotal } });
 
+    // Link and convert purchase proposal if provided
+    if (proposalId) {
+      await PurchaseProposal.findOneAndUpdate(
+        { proposalId, customer: req.user._id },
+        {
+          $set: {
+            status: 'converted_to_order',
+            convertedGroupId: groupId,
+            convertedOrderId: createdOrders[0]._id
+          }
+        }
+      );
+    }
+
     // Update user history & clear cart
     await User.findByIdAndUpdate(req.user._id, {
       $push: { 'profile.orderHistory': { $each: createdOrders.map(o => o._id) } },
@@ -209,6 +251,57 @@ router.post('/agent-checkout', auth, async (req, res) => {
   } catch (err) {
     console.error('Agent Checkout Error:', err);
     res.status(500).json({ message: err.message });
+  }
+});
+
+// Get multi-store group order details with store-by-store tracking
+router.get('/group/:groupId', auth, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const orders = await Order.find({ groupId, customer: req.user._id })
+      .populate('store', 'name emoji location hours stats')
+      .populate('items.product', 'name emoji price unit')
+      .sort({ createdAt: 1 });
+
+    if (!orders.length) {
+      return res.status(404).json({ success: false, message: 'Group order not found' });
+    }
+
+    const totalStores = orders.length;
+    const overallSubtotal = orders.reduce((sum, o) => sum + (o.pricing?.subtotal || 0), 0);
+    const overallDeliveryFee = orders.reduce((sum, o) => sum + (o.pricing?.deliveryFee || 0), 0);
+    const overallTotal = orders.reduce((sum, o) => sum + (o.pricing?.total || 0), 0);
+
+    const statuses = orders.map(o => o.status);
+    let overallProgress = 'in_progress';
+    if (statuses.every(s => s === 'delivered')) {
+      overallProgress = 'completed';
+    } else if (statuses.some(s => s === 'cancelled') && !statuses.some(s => s === 'delivered')) {
+      overallProgress = 'cancelled';
+    } else if (statuses.some(s => s === 'out_for_delivery')) {
+      overallProgress = 'out_for_delivery';
+    } else if (statuses.some(s => s === 'preparing')) {
+      overallProgress = 'preparing';
+    } else if (statuses.every(s => s === 'placed')) {
+      overallProgress = 'placed';
+    }
+
+    res.json({
+      success: true,
+      groupId,
+      totalStores,
+      overallProgress,
+      pricing: {
+        subtotal: overallSubtotal,
+        deliveryFee: overallDeliveryFee,
+        total: overallTotal
+      },
+      payment: orders[0].payment,
+      deliveryAddress: orders[0].delivery?.address,
+      orders
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

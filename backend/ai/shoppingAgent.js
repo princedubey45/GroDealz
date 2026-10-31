@@ -181,6 +181,19 @@ function parseShoppingRequest(query = '') {
 async function processAgentShoppingRequest(query = '', userPreferences = {}) {
   const req = parseShoppingRequest(query);
 
+  // Merge structured requirements from Python LangGraph if provided
+  if (userPreferences.extractedRequirements) {
+    const ext = userPreferences.extractedRequirements;
+    if (ext.family_size) req.familySize = ext.family_size;
+    if (ext.duration_days) req.durationDays = ext.duration_days;
+    if (ext.budget_limit) req.budget = ext.budget_limit;
+    if (ext.delivery_urgency) req.deliveryUrgency = ext.delivery_urgency;
+    if (ext.optimization_goal) req.qualityPreference = ext.optimization_goal;
+    if (ext.requested_items && Array.isArray(ext.requested_items) && ext.requested_items.length > 0) {
+      req.requestedItems = ext.requested_items.map(i => (typeof i === 'string' ? i : i.name).toLowerCase());
+    }
+  }
+
   // Apply user profile preferences if not overridden by explicit query
   if (req.dietary === 'all' && userPreferences.dietary) {
     req.dietary = userPreferences.dietary;

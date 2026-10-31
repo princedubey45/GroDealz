@@ -19,6 +19,8 @@ const demandRoutes          = require('./routes/demand');
 const aiRoutes              = require('./routes/ai');
 const ticketRoutes          = require('./routes/tickets');
 const paymentRoutes         = require('./routes/payment');
+const agentBridgeRoutes     = require('./routes/agentBridge');
+const proposalRoutes        = require('./routes/proposals');
 
 const { runDemandPrediction } = require('./ai/demandPrediction');
 
@@ -66,6 +68,8 @@ app.use('/api/demand',          demandRoutes);
 app.use('/api/ai',              aiRoutes);
 app.use('/api/tickets',         ticketRoutes);
 app.use('/api/payment',         paymentRoutes);
+app.use('/api/agent-bridge',    agentBridgeRoutes);
+app.use('/api/proposals',       proposalRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
@@ -76,6 +80,11 @@ io.on('connection', (socket) => {
   socket.on('track_order', (orderId) => {
     socket.join(`order_${orderId}`);
     console.log(`📦 Client tracking order: ${orderId}`);
+  });
+
+  socket.on('track_group', (groupId) => {
+    socket.join(`group_${groupId}`);
+    console.log(`🛍️ Client tracking group order: ${groupId}`);
   });
 
   socket.on('join_store', (storeId) => {
