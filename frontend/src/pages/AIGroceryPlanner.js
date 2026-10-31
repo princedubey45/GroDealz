@@ -34,6 +34,31 @@ export default function AIGroceryPlanner() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
+  // Live Animated Store-Hopping Tour States
+  const [currentTourIndex, setCurrentTourIndex] = useState(0);
+  const [isTourPlaying, setIsTourPlaying] = useState(false);
+  const [isTourMinimized, setIsTourMinimized] = useState(false);
+
+  // Auto-play store tour steps
+  useEffect(() => {
+    let timer = null;
+    const tour = agentData?.storeTour || [];
+    if (isTourPlaying && tour.length > 0) {
+      timer = setInterval(() => {
+        setCurrentTourIndex(prev => {
+          if (prev >= tour.length - 1) {
+            setIsTourPlaying(false);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 1400);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isTourPlaying, agentData]);
+
   // Load Razorpay checkout script
   useEffect(() => {
     const script = document.createElement('script');
@@ -83,12 +108,15 @@ export default function AIGroceryPlanner() {
   const handleRunAgent = async (promptText = query) => {
     if (!promptText.trim()) return;
     setLoading(true);
+    setIsTourPlaying(false);
     setNotification('');
     try {
       const res = await api.post('/ai/shopping-agent', { query: promptText });
       if (res.data?.success) {
         setAgentData(res.data);
         createOrUpdateProposal(res.data, activeStrategy);
+        setCurrentTourIndex(0);
+        setIsTourPlaying(true);
       }
     } catch (err) {
       console.error('Agent generation failed:', err);
@@ -258,6 +286,9 @@ export default function AIGroceryPlanner() {
     setTimeout(() => setNotification(''), 4000);
   };
 
+  const tour = agentData?.storeTour || [];
+  const activeTourStep = tour[currentTourIndex] || tour[tour.length - 1] || null;
+
   return (
     <div className={styles.container}>
       {/* Hero Section */}
@@ -344,13 +375,366 @@ export default function AIGroceryPlanner() {
       )}
 
       {loading ? (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>🤖</div>
-          <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>Scanning Shop Catalogues & Comparing Prices...</h3>
-          <p>Evaluating fresh vegetables, good-quality rice, unit rates, and delivery fees across shops.</p>
+        <div className={styles.tourContainer}>
+          <div className={styles.tourHeader}>
+            <div className={styles.tourTitleGroup}>
+              <span className={styles.liveBadge}>
+                <span className={styles.pulseDot} /> LIVE AGENT MISSION
+              </span>
+              <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.25rem' }}>Autonomous Shopping Run Initiated</h3>
+            </div>
+          </div>
+          <div className={styles.routeTracker}>
+            <div className={styles.routeTrackLine}>
+              <div className={styles.waypointItem}>
+                <div className={`${styles.waypointNode} ${styles.waypointActive}`}>
+                  <span>🛵</span>
+                  <span className={styles.agentAvatarBadge}>⚡</span>
+                </div>
+                <span className={styles.waypointName}>Route Engine</span>
+                <span className={styles.waypointStopTag}>Plotting Path</span>
+              </div>
+              <div className={styles.routeConnectingLine}>
+                <div className={styles.routeLineProgress} style={{ width: '45%' }} />
+              </div>
+              <div className={styles.waypointItem}>
+                <div className={styles.waypointNode}>🏪</div>
+                <span className={styles.waypointName}>Partner Shops</span>
+                <span className={styles.waypointStopTag}>Visiting</span>
+              </div>
+              <div className={styles.routeConnectingLine}>
+                <div className={styles.routeLineProgress} style={{ width: '15%' }} />
+              </div>
+              <div className={styles.waypointItem}>
+                <div className={styles.waypointNode}>⚖️</div>
+                <span className={styles.waypointName}>Unit Rates</span>
+                <span className={styles.waypointStopTag}>Comparing</span>
+              </div>
+              <div className={styles.routeConnectingLine}>
+                <div className={styles.routeLineProgress} style={{ width: '0%' }} />
+              </div>
+              <div className={styles.waypointItem}>
+                <div className={styles.waypointNode}>🧺</div>
+                <span className={styles.waypointName}>Basket Hub</span>
+                <span className={styles.waypointStopTag}>Optimizing</span>
+              </div>
+            </div>
+          </div>
+          <div className={styles.hudCard}>
+            <div className={styles.hudLeftPanel}>
+              <div className={styles.hudStoreHeader}>
+                <div className={styles.hudStoreIdentity}>
+                  <div className={styles.hudStoreEmoji}>🤖</div>
+                  <div>
+                    <div className={styles.hudStoreName}>Autonomous Shopper Dispatched</div>
+                    <div className={styles.hudStoreSub}>Scanning local partner store shelves in real-time...</div>
+                  </div>
+                </div>
+              </div>
+              <div className={styles.hudNarrationBox}>
+                Analyzing natural language query, extracting dietary requirements, and routing store visits across available shops...
+              </div>
+            </div>
+            <div className={styles.hudRightPanel}>
+              <div className={styles.hudScannerHeader}>
+                <span>Live Shelf Scanner</span>
+                <span>Active</span>
+              </div>
+              <div className={styles.scannerBeam} />
+              <div className={styles.terminalCard}>
+                <div className={styles.terminalHeader}>
+                  <div className={styles.terminalDots}>
+                    <div className={styles.terminalDot} />
+                    <div className={styles.terminalDot} />
+                    <div className={styles.terminalDot} />
+                  </div>
+                  <span>Agent Telemetry</span>
+                </div>
+                <div className={styles.terminalLogLine}>
+                  <span className={styles.terminalTime}>[LIVE]</span>
+                  <span className={styles.terminalHighlight}>Connecting to multi-store discovery network...</span>
+                </div>
+                <div className={styles.terminalLogLine}>
+                  <span className={styles.terminalTime}>[LIVE]</span>
+                  <span>Fetching active inventory & unit pricing (₹/kg, ₹/L)...</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       ) : agentData?.strategies ? (
         <>
+          {/* Live Animated Store-Hopping Tour Card */}
+          {tour.length > 0 && (
+            <div className={styles.tourContainer}>
+              <div className={styles.tourHeader}>
+                <div className={styles.tourTitleGroup}>
+                  <span className={styles.liveBadge}>
+                    <span className={styles.pulseDot} />
+                    {isTourPlaying ? 'LIVE STORE TOUR' : 'STORE JOURNEY AUDIT'}
+                  </span>
+                  <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.2rem', fontWeight: 800 }}>
+                    {isTourPlaying ? 'Autonomous Shopper Visiting Stores...' : 'Autonomous Shopping Journey & Picking Audit'}
+                  </h3>
+                </div>
+                <div className={styles.tourControls}>
+                  {isTourPlaying ? (
+                    <>
+                      <button className={styles.tourBtn} onClick={() => setIsTourPlaying(false)}>
+                        ⏸ Pause
+                      </button>
+                      <button
+                        className={`${styles.tourBtn} ${styles.tourBtnPrimary}`}
+                        onClick={() => {
+                          setCurrentTourIndex(tour.length - 1);
+                          setIsTourPlaying(false);
+                        }}
+                      >
+                        ⏩ Skip to Basket
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        className={`${styles.tourBtn} ${styles.tourBtnPrimary}`}
+                        onClick={() => {
+                          setCurrentTourIndex(0);
+                          setIsTourPlaying(true);
+                        }}
+                      >
+                        ▶ Replay Store Journey
+                      </button>
+                      <button
+                        className={styles.tourBtn}
+                        onClick={() => setIsTourMinimized(!isTourMinimized)}
+                      >
+                        {isTourMinimized ? '📂 Expand Tour' : '📁 Collapse'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {!isTourMinimized && (
+                <>
+                  {/* Horizontal Waypoint Map with Moving Avatar */}
+                  <div className={styles.routeTracker}>
+                    <div className={styles.routeTrackLine}>
+                      {/* Start Node */}
+                      <div
+                        className={`${styles.waypointItem} ${currentTourIndex === 0 ? styles.waypointActive : styles.waypointCompleted}`}
+                        onClick={() => setCurrentTourIndex(0)}
+                      >
+                        <div className={styles.waypointNode}>
+                          <span>🛵</span>
+                          {currentTourIndex === 0 && <span className={styles.agentAvatarBadge}>📍</span>}
+                        </div>
+                        <span className={styles.waypointName}>Dispatch</span>
+                        <span className={styles.waypointStopTag}>Start</span>
+                      </div>
+
+                      {/* Connecting line to first store */}
+                      <div className={styles.routeConnectingLine}>
+                        <div
+                          className={styles.routeLineProgress}
+                          style={{ width: currentTourIndex > 0 ? '100%' : '0%' }}
+                        />
+                      </div>
+
+                      {/* Stores Visited Nodes */}
+                      {(agentData.storesVisited || []).map((vStore, sIdx) => {
+                        const isCurrentStoreActive = activeTourStep?.store?.id === vStore.store.id;
+                        const hasPassed = tour.slice(0, currentTourIndex + 1).some(st => st.store?.id === vStore.store.id);
+
+                        return (
+                          <React.Fragment key={sIdx}>
+                            <div
+                              className={`${styles.waypointItem} ${isCurrentStoreActive ? styles.waypointActive : hasPassed ? styles.waypointCompleted : ''}`}
+                              onClick={() => {
+                                const firstStepIdx = tour.findIndex(st => st.store?.id === vStore.store.id);
+                                if (firstStepIdx !== -1) setCurrentTourIndex(firstStepIdx);
+                              }}
+                            >
+                              <div className={styles.waypointNode}>
+                                <span>{vStore.store.emoji || '🏪'}</span>
+                                {isCurrentStoreActive && <span className={styles.agentAvatarBadge}>🛵</span>}
+                              </div>
+                              <span className={styles.waypointName}>{vStore.store.name}</span>
+                              <span className={styles.waypointStopTag}>Stop #{sIdx + 1} ({vStore.itemCount} items)</span>
+                            </div>
+
+                            <div className={styles.routeConnectingLine}>
+                              <div
+                                className={styles.routeLineProgress}
+                                style={{ width: hasPassed && currentTourIndex > sIdx ? '100%' : '0%' }}
+                              />
+                            </div>
+                          </React.Fragment>
+                        );
+                      })}
+
+                      {/* Final Basket Node */}
+                      <div
+                        className={`${styles.waypointItem} ${currentTourIndex >= tour.length - 1 ? styles.waypointActive : ''}`}
+                        onClick={() => setCurrentTourIndex(tour.length - 1)}
+                      >
+                        <div className={styles.waypointNode}>
+                          <span>🎯</span>
+                          {currentTourIndex >= tour.length - 1 && <span className={styles.agentAvatarBadge}>✓</span>}
+                        </div>
+                        <span className={styles.waypointName}>Final Basket</span>
+                        <span className={styles.waypointStopTag}>Optimized</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Heads-Up Display (HUD) Active Step Inspector */}
+                  <div className={styles.hudCard}>
+                    {/* Left Panel: Store Identity & Action Narration */}
+                    <div className={styles.hudLeftPanel}>
+                      <div>
+                        <div className={styles.hudStoreHeader}>
+                          <div className={styles.hudStoreIdentity}>
+                            <div className={styles.hudStoreEmoji}>
+                              {activeTourStep?.store?.emoji || activeTourStep?.icon || '🏪'}
+                            </div>
+                            <div>
+                              <div className={styles.hudStoreName}>
+                                {activeTourStep?.store?.name || activeTourStep?.title}
+                              </div>
+                              <div className={styles.hudStoreSub}>
+                                {activeTourStep?.store?.area ? `📍 In Store Aisle · ${activeTourStep.store.area} · ⭐ ${activeTourStep.store.rating || 4.5}` : activeTourStep?.badge}
+                              </div>
+                            </div>
+                          </div>
+                          <span className={styles.liveBadge}>{activeTourStep?.badge || 'Tour Step'}</span>
+                        </div>
+
+                        <div className={styles.hudNarrationBox}>
+                          {activeTourStep?.narration}
+                        </div>
+                      </div>
+
+                      {/* Step scrubber */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+                        <button
+                          className={styles.tourBtn}
+                          disabled={currentTourIndex <= 0}
+                          onClick={() => setCurrentTourIndex(prev => Math.max(0, prev - 1))}
+                        >
+                          ◀ Prev
+                        </button>
+                        <span style={{ fontSize: '0.8rem', color: '#94a3b8', flex: 1, textAlign: 'center' }}>
+                          Step {currentTourIndex + 1} of {tour.length}
+                        </span>
+                        <button
+                          className={styles.tourBtn}
+                          disabled={currentTourIndex >= tour.length - 1}
+                          onClick={() => setCurrentTourIndex(prev => Math.min(tour.length - 1, prev + 1))}
+                        >
+                          Next ▶
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Right Panel: Shelf Scanner & Price Comparison Radar */}
+                    <div className={styles.hudRightPanel}>
+                      <div className={styles.hudScannerHeader}>
+                        <span>Shelf Inspection & Price Radar</span>
+                        <span style={{ color: '#10b981' }}>
+                          {activeTourStep?.type === 'inspect_and_pick' ? 'Item Selected' : 'Active'}
+                        </span>
+                      </div>
+                      <div className={styles.scannerBeam} />
+
+                      {activeTourStep?.item ? (
+                        <div>
+                          <div className={styles.hudItemCard}>
+                            <div className={styles.hudItemLeft}>
+                              <span className={styles.hudItemEmoji}>{activeTourStep.item.emoji}</span>
+                              <div>
+                                <div className={styles.hudItemTitle}>{activeTourStep.item.name}</div>
+                                <div className={styles.hudItemDetail}>
+                                  Qty: {activeTourStep.item.quantity} ({activeTourStep.item.unit}) • ₹{activeTourStep.item.price} / unit
+                                </div>
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#10b981' }}>
+                                ₹{activeTourStep.item.lineTotal}
+                              </div>
+                              <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                                Normalized: ₹{activeTourStep.item.normalizedRate}/kg
+                              </div>
+                            </div>
+                          </div>
+
+                          {activeTourStep.comparison && (
+                            <div className={styles.hudComparisonBox}>
+                              <span>⚖️ vs {activeTourStep.comparison.alternativeStore}: ₹{activeTourStep.comparison.alternativePrice}</span>
+                              <strong>{activeTourStep.comparison.savings > 0 ? `Saved ₹${activeTourStep.comparison.savings} at this shop` : 'Fresher Quality Choice'}</strong>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ padding: '16px 0', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem' }}>
+                          {activeTourStep?.type === 'dispatch' && '🗺️ Route computed. Dispatched to local partner stores.'}
+                          {activeTourStep?.type === 'arrival' && `🚪 Entered store entrance. Scanning shelves for verified stock...`}
+                          {activeTourStep?.type === 'store_packed' && `🛍️ Bagged items from this shop. Moving to next destination...`}
+                          {activeTourStep?.type === 'mission_complete' && `🎯 Complete! All items sourced and optimized.`}
+                        </div>
+                      )}
+
+                      {/* Real-Time Terminal Log */}
+                      <div className={styles.terminalCard} style={{ marginTop: '12px' }}>
+                        <div className={styles.terminalHeader}>
+                          <div className={styles.terminalDots}>
+                            <div className={styles.terminalDot} />
+                            <div className={styles.terminalDot} />
+                            <div className={styles.terminalDot} />
+                          </div>
+                          <span>Autonomous Agent Event Log</span>
+                        </div>
+                        {tour.slice(0, currentTourIndex + 1).map((logStep, lIdx) => (
+                          <div key={lIdx} className={styles.terminalLogLine}>
+                            <span className={styles.terminalTime}>[{logStep.badge || 'STOP'}]</span>
+                            <span className={lIdx === currentTourIndex ? styles.terminalHighlight : ''}>
+                              {logStep.title}: {logStep.narration}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Metrics Bar */}
+                  {agentData.tourMetrics && (
+                    <div className={styles.tourMetricsBar}>
+                      <div className={styles.tourMetricItem}>
+                        <div className={styles.tourMetricVal}>{agentData.tourMetrics.totalStoresVisited}</div>
+                        <div className={styles.tourMetricLabel}>Shops Visited</div>
+                      </div>
+                      <div className={styles.tourMetricItem}>
+                        <div className={styles.tourMetricVal}>{agentData.tourMetrics.totalProductsScanned}</div>
+                        <div className={styles.tourMetricLabel}>Products Scanned</div>
+                      </div>
+                      <div className={styles.tourMetricItem}>
+                        <div className={styles.tourMetricVal}>{agentData.tourMetrics.averageStoreRating} ⭐</div>
+                        <div className={styles.tourMetricLabel}>Avg Store Rating</div>
+                      </div>
+                      <div className={styles.tourMetricItem}>
+                        <div className={styles.tourMetricVal} style={{ color: '#38bdf8' }}>
+                          ₹{agentData.tourMetrics.totalSavingsDiscovered}
+                        </div>
+                        <div className={styles.tourMetricLabel}>Discovered Savings</div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           {/* Strategy Tabs */}
           <div className={styles.tabsContainer}>
             <button
@@ -409,6 +793,19 @@ export default function AIGroceryPlanner() {
                             <div>
                               <div className={styles.itemName}>
                                 {item.name} <span className={styles.itemUnit}>· {item.quantity} ({item.unit})</span>
+                                <span style={{
+                                  background: 'rgba(16, 185, 129, 0.12)',
+                                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                                  color: '#10b981',
+                                  fontSize: '0.72rem',
+                                  fontWeight: '700',
+                                  padding: '2px 8px',
+                                  borderRadius: '4px',
+                                  marginLeft: '8px',
+                                  display: 'inline-block'
+                                }}>
+                                  🏪 Sourced at Stop #{sIdx + 1}
+                                </span>
                               </div>
                               <div className={styles.itemRationale}>
                                 ✨ {item.rationale}

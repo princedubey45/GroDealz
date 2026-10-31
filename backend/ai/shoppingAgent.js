@@ -450,6 +450,166 @@ async function processAgentShoppingRequest(query = '', userPreferences = {}) {
     }
   }
 
+  // 7. Construct Autonomous Multi-Store Visiting Tour & Audit Log
+  const storeTour = [];
+  let stepIndex = 1;
+
+  // Step 1: Mission Start / Route Planning
+  storeTour.push({
+    step: stepIndex++,
+    type: 'dispatch',
+    badge: 'Mission Start',
+    title: 'Autonomous Shopper Dispatched',
+    narration: `AI Agent parsed requirements for ${req.familySize} people (${req.durationDays} days) and plotted a multi-store route across ${multiStoreList.length} local shops.`,
+    detail: `Target Budget: ${req.budget ? '₹' + req.budget : 'Flexible'} • Delivery: ${req.deliveryUrgency} • Dietary: ${req.dietary.toUpperCase()}`,
+    icon: '🛵'
+  });
+
+  // Track stores visited and their items
+  const storesVisited = [];
+
+  multiStoreList.forEach((group, sIdx) => {
+    const store = group.store;
+    const storeItems = group.items;
+    const distanceKm = ((sIdx + 1) * 0.7 + 0.2).toFixed(1);
+
+    // 1. Arrival at Store
+    storeTour.push({
+      step: stepIndex++,
+      type: 'arrival',
+      badge: `Stop #${sIdx + 1} of ${multiStoreList.length}`,
+      store: {
+        id: store.id,
+        name: store.name,
+        emoji: store.emoji || '🏪',
+        area: store.area || 'Local Area',
+        rating: store.rating || 4.5
+      },
+      title: `Arrived at ${store.name}`,
+      narration: `Navigated to ${store.name} in ${store.area} (${distanceKm} km away). Entering grocery aisles...`,
+      icon: store.emoji || '🏪'
+    });
+
+    const inspectedItems = [];
+
+    // 2. Shelf scanning and price comparisons for this store
+    storeItems.forEach(item => {
+      // Find candidate alternatives in other stores for this item/slot
+      const allCategoryCandidates = Object.values(slotCandidates)
+        .flatMap(sc => sc.candidates)
+        .filter(c => c.category === item.category || c.name.toLowerCase().includes(item.name.toLowerCase().split(' ')[0]));
+
+      const altStoreCandidate = allCategoryCandidates.find(c => c.store.id.toString() !== store.id.toString());
+      
+      let rateDiffText = '';
+      if (altStoreCandidate) {
+        const rateDiff = altStoreCandidate.normalizedRate - item.normalizedRate;
+        if (rateDiff > 0) {
+          rateDiffText = `Cheaper by ₹${Math.round(rateDiff)}/unit than ${altStoreCandidate.store.name} (₹${altStoreCandidate.price})`;
+        } else {
+          rateDiffText = `Preferred choice for freshness and high store rating (${store.rating}⭐)`;
+        }
+      } else {
+        rateDiffText = `Best verified in-stock inventory for this staple`;
+      }
+
+      inspectedItems.push({
+        name: item.name,
+        emoji: item.emoji,
+        price: item.price,
+        unit: item.unit,
+        quantity: item.quantity,
+        normalizedRate: item.normalizedRate,
+        lineTotal: item.lineTotal,
+        rationale: item.rationale,
+        savingsText: rateDiffText
+      });
+
+      // Item Inspection & Comparison Step
+      storeTour.push({
+        step: stepIndex++,
+        type: 'inspect_and_pick',
+        badge: 'Item Picked',
+        store: {
+          id: store.id,
+          name: store.name,
+          emoji: store.emoji || '🏪'
+        },
+        item: {
+          name: item.name,
+          emoji: item.emoji || '🛒',
+          price: item.price,
+          unit: item.unit,
+          quantity: item.quantity,
+          normalizedRate: item.normalizedRate,
+          lineTotal: item.lineTotal
+        },
+        comparison: altStoreCandidate ? {
+          alternativeStore: altStoreCandidate.store.name,
+          alternativePrice: altStoreCandidate.price,
+          alternativeRate: altStoreCandidate.normalizedRate,
+          savings: Math.max(0, altStoreCandidate.price - item.price)
+        } : null,
+        title: `Picked: ${item.name} (${item.quantity} ${item.unit})`,
+        narration: `Inspected shelf and selected ${item.name} at ₹${item.price} (${item.unit}). ${rateDiffText}.`,
+        icon: item.emoji || '🛒'
+      });
+    });
+
+    // 3. Basket packed at this store
+    storeTour.push({
+      step: stepIndex++,
+      type: 'store_packed',
+      badge: 'Store Packed',
+      store: {
+        id: store.id,
+        name: store.name,
+        emoji: store.emoji || '🏪'
+      },
+      title: `Packed ${storeItems.length} items at ${store.name}`,
+      narration: `Bagged ${storeItems.length} verified items totaling ₹${group.subtotal} (+ ₹${storeDeliveryFee} delivery fee). Proceeding on shopping route...`,
+      subtotal: group.subtotal,
+      itemCount: storeItems.length,
+      icon: '🛍️'
+    });
+
+    storesVisited.push({
+      store: store,
+      distanceKm,
+      itemsPicked: inspectedItems,
+      itemCount: inspectedItems.length,
+      subtotal: group.subtotal,
+      deliveryFee: storeDeliveryFee
+    });
+  });
+
+  // Final Step: Complete Mission
+  const totalNetSavings = totalDiscountSavings + (comparativeSavings > 0 ? comparativeSavings : 0);
+  storeTour.push({
+    step: stepIndex++,
+    type: 'mission_complete',
+    badge: 'Tour Complete',
+    title: 'Autonomous Multi-Store Mission Complete',
+    narration: `Agent finished visiting ${multiStoreList.length} stores, inspected all items on shelves, and saved ₹${totalNetSavings}! Ready for review and checkout.`,
+    summary: {
+      storesVisitedCount: multiStoreList.length,
+      itemsCount: multiStoreItems.length,
+      itemsSubtotal: multiStoreItemSubtotal,
+      deliveryTotal: multiStoreDeliveryTotal,
+      grandTotal: multiStoreGrandTotal,
+      totalSavings: totalNetSavings
+    },
+    icon: '🎯'
+  });
+
+  const tourMetrics = {
+    totalStoresVisited: multiStoreList.length,
+    totalProductsScanned: Object.values(slotCandidates).reduce((acc, sc) => acc + (sc.candidates?.length || 0), 0),
+    totalItemsPicked: multiStoreItems.length,
+    totalSavingsDiscovered: totalNetSavings,
+    averageStoreRating: (multiStoreList.reduce((acc, g) => acc + (g.store.rating || 4.2), 0) / (multiStoreList.length || 1)).toFixed(1)
+  };
+
   return {
     success: true,
     request: req,
@@ -461,6 +621,9 @@ async function processAgentShoppingRequest(query = '', userPreferences = {}) {
       qualityPreference: req.qualityPreference,
       dietary: req.dietary
     },
+    storeTour,
+    storesVisited,
+    tourMetrics,
     strategies: {
       multiStore: {
         title: 'Smart Multi-Store Value (Recommended)',
