@@ -4,27 +4,160 @@
 
 This chapter translates the requirements specified in Chapter~3 into architectural, database, mathematical, and algorithmic designs. It details the high-level system tiers, data models, the autonomous agent workflow, the merchant quotation engine formulas, and real-time communication events.
 
-\section{High-Level Architecture}
+\section{Architectural Evolution: 1-Tier, 2-Tier, and 3-Tier Models}
 
-GroDealz is structured as a modular, three-tier client-server architecture designed for high responsiveness and clear separation of concerns, as illustrated in Figure~\ref{fig:arch}.
+Before examining the detailed design of GroDealz, it is useful to review the architectural evolution from monolithic 1-tier and 2-tier client-server designs to the modern 3-tier architecture.
+
+\subsection{1-Tier vs.\ 2-Tier Architectural Models}
+
+Figure~\ref{fig:1tier_2tier} illustrates the fundamental differences between 1-tier and 2-tier architectures:
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.92\textwidth,keepaspectratio]{figures/three_tier.png}
-\caption{Three-Tier Architecture of the GroDealz Platform}
-\label{fig:arch}
+\begin{subfigure}[b]{\linewidth}
+  \centering
+  \begin{tikzpicture}[node distance=0.85cm]
+    \node[tierbox, fill=orange!10, draw=orange!70!black, minimum width=8.5cm, minimum height=0.75cm, align=center] (p1) {
+      \textbf{Presentation Layer} (User Interface, Forms, Menus)
+    };
+    \node[tierbox, fill=green!10, draw=green!70!black, minimum width=8.5cm, minimum height=0.75cm, below=of p1, align=center] (a1) {
+      \textbf{Application Logic} (Calculations, Validation Rules, Business Logic)
+    };
+    \node[tierbox, fill=purple!10, draw=purple!70!black, minimum width=8.5cm, minimum height=0.75cm, below=of a1, align=center] (d1) {
+      \textbf{Data Layer} (Local Files, Embedded SQLite / Access Database)
+    };
+    
+    \draw[arrowflow, shorten >= 4mm, shorten <= 4mm] (p1.south) -- node[midway, right=6pt, font=\scriptsize, text=black!70] {In-Memory Function Calls} (a1.north);
+    \draw[arrowflow, shorten >= 4mm, shorten <= 4mm] (a1.south) -- node[midway, right=6pt, font=\scriptsize, text=black!70] {Direct File / Embedded DB I/O} (d1.north);
+
+    \begin{scope}[on background layer]
+      \node[tierframe, fill=gray!3, fit=(p1) (a1) (d1), label={[font=\small\bfseries, yshift=-1pt]above:1-Tier: Standalone Personal Computer / Monolith}] {};
+    \end{scope}
+  \end{tikzpicture}
+  \caption{1-Tier Monolithic Model (Single Standalone Machine)}
+  \label{fig:1tier}
+\end{subfigure}
+
+\vspace{0.7cm}
+
+\begin{subfigure}[b]{\linewidth}
+  \centering
+  \begin{tikzpicture}[node distance=4.0cm]
+    \node[tierbox, fill=blue!8, draw=blue!70!black, minimum width=4.0cm, minimum height=2.4cm, align=center] (client) {
+      \textbf{Client Tier (``Fat Client'')}\\[0.3em]
+      \rule{3.5cm}{0.4pt}\\[0.4em]
+      Presentation Layer (GUI)\\[0.2em]
+      +\\
+      Application Business Logic\\[0.2em]
+      Embedded DB Credentials
+    };
+    \node[tierbox, fill=purple!8, draw=purple!70!black, minimum width=4.0cm, minimum height=2.4cm, align=center, right=of client] (db) {
+      \textbf{Database Tier (Server)}\\[0.3em]
+      \rule{3.5cm}{0.4pt}\\[0.4em]
+      Central Database Server\\[0.2em]
+      (SQL Server / Oracle / MySQL)\\[0.2em]
+      Shared Data Storage \& Tables
+    };
+
+    \draw[arrowflow] ([yshift=10pt]client.east) -- node[midway, above=2pt, font=\scriptsize, align=center] {Direct SQL Queries\\(ODBC / JDBC)} ([yshift=10pt]db.west);
+    \draw[arrowflow] ([yshift=-10pt]db.west) -- node[midway, below=2pt, font=\scriptsize, align=center] {Result Dataset\\(Table Records)} ([yshift=-10pt]client.east);
+  \end{tikzpicture}
+  \caption{2-Tier Client-Server Model (Direct Database Connection)}
+  \label{fig:2tier}
+\end{subfigure}
+\caption{Architectural Evolution: 1-Tier vs.\ 2-Tier Models}
+\label{fig:1tier_2tier}
 \end{figure}
 
 \begin{enumerate}
-    \item \textbf{Presentation Tier (Frontend):} A single-page application built using React 18, React Router v6, and scoped CSS modules. It uses React context providers for user authentication state (\texttt{AuthContext}), client-side cart management with \texttt{localStorage} persistence (\texttt{CartContext}), and WebSocket subscriptions (\texttt{SocketContext}).
-    \item \textbf{Application Tier (Backend Services):}
+    \item \textbf{1-Tier Architecture (Monolithic):} In a 1-tier architecture, the presentation layer, application business logic, and database storage reside on the exact same physical computer (for example, a traditional desktop application using an embedded SQLite or Microsoft Access database). While this model requires zero network overhead, it is completely unsuitable for a multi-store grocery platform: multiple customers, store owners, and delivery riders cannot coordinate shared inventory, live orders, or real-time bids on a standalone machine.
+    \item \textbf{2-Tier Architecture (Traditional Client-Server):} In a 2-tier architecture, the presentation interface and application business logic run together on a ``fat client'' machine, which communicates directly over a local network or VPN to a centralized database server using database connection protocols (such as ODBC or JDBC). While this enables shared data storage, it introduces critical vulnerabilities:
     \begin{itemize}
-        \item \textbf{Node.js / Express Core Server:} Handles standard REST APIs for authentication, product catalog browsing, order placements, and support tickets.
-        \item \textbf{Socket.IO Server:} Operates alongside Express on the same HTTP server to maintain persistent WebSocket connections for live notifications and status sync.
-        \item \textbf{Quotation Engine Service (\texttt{quotationEngine.js}):} Evaluates merchant line-item bids, calculates totals, executes multi-criteria ranking algorithms, and handles atomic order conversions.
-        \item \textbf{Python Agent Service (FastAPI / LangGraph):} Houses the autonomous grocery shopping agent, coordinating cross-store catalog searches, price audits, and multi-store basket optimizations.
+        \item \emph{Security Risk:} Embedding direct database credentials within the client application exposes the core database to tampering.
+        \item \emph{Tight Coupling and Maintenance Burden:} Any modification to business logic, pricing rules, or quotation ranking algorithms requires updating the client software on every user's device.
+        \item \emph{Poor Scalability for AI Tasks:} Complex computations---such as cross-store basket optimization and demand forecasting---would consume local client device memory and cannot easily leverage server-side parallelism.
     \end{itemize}
-    \item \textbf{Data Tier (Database):} A MongoDB database accessed via Mongoose ODM, utilizing compound indexes for fast lookups by store, category, and order status.
+\end{enumerate}
+
+\subsection{3-Tier Architecture of GroDealz}
+
+To overcome these structural limitations, GroDealz implements a clean \textbf{3-Tier Architecture}, decoupling the Presentation Tier, the Application and AI Logic Tier, and the Data Persistence Tier. Figure~\ref{fig:3tier_arch} depicts the architectural tiers and the communication flows between them.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[node distance=4.0cm]
+  % Tier 1
+  \node[tierbox, fill=blue!6, draw=blue!70!black, minimum width=4.2cm, minimum height=5.2cm, align=center] (t1) {
+    \textbf{\large Tier 1: Presentation}\\[0.2em]
+    \textbf{\footnotesize (Frontend SPA)}\\[0.3em]
+    \rule{3.8cm}{0.4pt}\\[0.4em]
+    React 18 Single-Page App\\[0.25em]
+    React Router v6 Navigation\\[0.25em]
+    AuthContext \& CartContext\\[0.25em]
+    Socket.IO Client Connection\\[0.25em]
+    Axios HTTP Interceptor (JWT)\\[0.25em]
+    Buyer RFQ \& Merchant Bids\\[0.25em]
+    AI Copilot \& Store Tour UI\\[0.25em]
+    Customer Support CRM
+  };
+
+  % Tier 2
+  \node[tierbox, fill=green!6, draw=green!70!black, minimum width=4.8cm, minimum height=5.2cm, align=center, right=of t1] (t2) {
+    \textbf{\large Tier 2: Application \& AI Logic}\\[0.2em]
+    \textbf{\footnotesize (Node.js API + Python FastAPI)}\\[0.3em]
+    \rule{4.4cm}{0.4pt}\\[0.4em]
+    Express 4 REST Core Server\\[0.25em]
+    JWT Authentication Middleware\\[0.25em]
+    Module B Quotation Engine\\[0.25em]
+    Python LangGraph Agent\\[0.25em]
+    Hybrid Recommendation Engine\\[0.25em]
+    Automated Demand Forecaster\\[0.25em]
+    Socket.IO Room Dispatcher\\[0.25em]
+    NLP Intent Classifier \& PII Mask
+  };
+
+  % Tier 3
+  \node[tierbox, fill=purple!6, draw=purple!70!black, minimum width=4.2cm, minimum height=5.2cm, align=center, right=of t2] (t3) {
+    \textbf{\large Tier 3: Data Layer}\\[0.2em]
+    \textbf{\footnotesize (Persistence \& Schemas)}\\[0.3em]
+    \rule{3.8cm}{0.4pt}\\[0.4em]
+    MongoDB Atlas (Mongoose ODM)\\[0.25em]
+    User \& Store Collections\\[0.25em]
+    Product Catalog (Indexed)\\[0.25em]
+    BuyerRequest Collection\\[0.25em]
+    MerchantQuotation Bids\\[0.25em]
+    Order Status History\\[0.25em]
+    Support Tickets \& CRM Log\\[0.25em]
+    Compound \& Text Indexes
+  };
+
+  % Arrows between Tier 1 and Tier 2 (shorten >= 6mm ensures arrowheads have generous daylight from box borders)
+  \draw[arrowflow] ([yshift=18pt]t1.east) -- node[midway, above=2pt, font=\scriptsize, align=center] {HTTPS REST / JSON\\(JWT Bearer Token)} ([yshift=18pt]t2.west);
+  \draw[arrowflow] ([yshift=-18pt]t2.west) -- node[midway, below=2pt, font=\scriptsize, align=center] {Socket.IO Push\\(Real-Time Sync)} ([yshift=-18pt]t1.east);
+
+  % Arrows between Tier 2 and Tier 3 (shorten >= 6mm ensures arrowheads have generous daylight from box borders)
+  \draw[arrowflow] ([yshift=18pt]t2.east) -- node[midway, above=2pt, font=\scriptsize, align=center] {Mongoose Queries\\(CRUD \& Filter)} ([yshift=18pt]t3.west);
+  \draw[arrowflow] ([yshift=-18pt]t3.west) -- node[midway, below=2pt, font=\scriptsize, align=center] {BSON Result Sets\\\& Aggregations} ([yshift=-18pt]t2.east);
+
+\end{tikzpicture}%
+}
+\caption{3-Tier High-Level Architecture of the GroDealz Platform}
+\label{fig:3tier_arch}
+\end{figure}
+
+The responsibilities of each tier are defined as follows:
+
+\begin{enumerate}
+    \item \textbf{Tier 1 --- Presentation Tier (Client):} Built as a lightweight, reactive Single-Page Application (SPA) using React 18. The presentation tier manages local state (such as the cart, user login status, active filters, and navigation paths) and renders the dark-mode responsive interface. It communicates with Tier~2 exclusively over secure HTTPS REST endpoints and persistent WebSocket channels, ensuring that no database credentials or internal business formulas are exposed to the client.
+    \item \textbf{Tier 2 --- Application and AI Logic Tier (Server):} Implemented using Node.js with Express~4 and Python 3.10 with FastAPI/LangGraph. This tier acts as the centralized brain of the platform:
+    \begin{itemize}
+        \item \emph{Security \& Authentication:} Validates cryptographic JWT signatures on incoming requests and enforces role-based authorization (customer vs.\ store owner vs.\ admin).
+        \item \emph{Quotation Engine (Module B):} Evaluates line-item mathematics, computes dynamic ranking scores across customer-selected criteria, manages counter-offers, and coordinates atomic order conversion.
+        \item \emph{Autonomous Shopping Agent:} Executes LangGraph decision graphs to search cross-store catalogs, verify inventory, optimize multi-store baskets, and compile picking itineraries.
+        \item \emph{Real-Time Event Dispatcher:} Manages Socket.IO connection rooms (\texttt{merchants\_rfq}, \texttt{rfq\_<id>}, \texttt{order\_<id>}) to broadcast instantaneous updates without client polling.
+    \end{itemize}
+    \item \textbf{Tier 3 --- Data Persistence Tier (Database):} Managed by MongoDB Atlas via the Mongoose Object Document Mapper (ODM). Tier~3 guarantees transactional persistence, document validation, and high-performance querying through compound indexes on frequently queried fields. Direct database access is strictly isolated to Tier~2 through private database URIs.
 \end{enumerate}
 
 \section{Database Design and Data Models}
@@ -43,31 +176,31 @@ In addition to the standard User, Product, Store, and Order collections, GroDeal
 \subsection{Buyer Request Schema (\texttt{BuyerRequest})}
 Stores custom customer shopping requirements:
 \begin{itemize}
-    \item \texttt{requestId}: Unique human-readable identifier (e.g., \texttt{RFQ-20261031-4821}).
-    \item \texttt{customer}: Reference to the User ID of the buyer.
-    \item \texttt{title}: Short summary (e.g., ``25 kg Basmati Rice for Hostel'').
-    \item \texttt{rawPrompt}: Original natural language text entered by the customer.
-    \item \texttt{items}: Array of requested items, each containing \texttt{name}, \texttt{quantity}, \texttt{unit} (kg, g, L, pack, pc), \texttt{preferredBrand}, and \texttt{qualityGrade}.
-    \item \texttt{budget}: Optional numerical target budget in Indian Rupees.
-    \item \texttt{shareBudgetWithMerchants}: Boolean flag controlling whether competing merchants can see the target budget or if it remains private.
-    \item \texttt{deliveryDeadline}: Timestamp by which delivery is required.
-    \item \texttt{rankingPriority}: Chosen priority criterion (\texttt{lowest\_price}, \texttt{fastest\_delivery}, \texttt{highest\_rated}, \texttt{balanced}).
-    \item \texttt{status}: State tracker (\texttt{open}, \texttt{quotes\_received}, \texttt{negotiating}, \texttt{accepted}, \texttt{cancelled}, \texttt{expired}).
-    \item \texttt{convertedOrderId}: Reference to the final generated Order upon acceptance.
+    \item \textbf{\texttt{requestId}}: Unique identifier code (e.g., \texttt{RFQ-20261031-4821}).
+    \item \textbf{\texttt{customer}}: Reference to the User ID of the buyer.
+    \item \textbf{\texttt{title}}: Short requirement summary (e.g., ``25 kg Basmati Rice for Hostel'').
+    \item \textbf{\texttt{rawPrompt}}: Raw natural language prompt entered by the buyer.
+    \item \textbf{\texttt{items}}: Structured array of requested items with quantities, units, and brand preferences.
+    \item \textbf{\texttt{budget}}: Optional numerical target budget in Indian Rupees.
+    \item \textbf{\texttt{shareBudgetWithMerchants}}: Boolean flag to share target budget with bidding merchants.
+    \item \textbf{\texttt{deliveryDeadline}}: Required delivery completion timestamp.
+    \item \textbf{\texttt{rankingPriority}}: Chosen sorting criterion (price, delivery, rating, or balanced).
+    \item \textbf{\texttt{status}}: Current state (\texttt{open}, \texttt{quotes\_received}, \texttt{negotiating}, \texttt{accepted}, \texttt{expired}).
+    \item \textbf{\texttt{convertedOrderId}}: Reference to the created order when quotation is accepted.
 \end{itemize}
 
 \subsection{Merchant Quotation Schema (\texttt{MerchantQuotation})}
 Stores itemized quotations submitted by competing store owners:
 \begin{itemize}
-    \item \texttt{quotationId}: Unique identifier (e.g., \texttt{QUO-20261031-1049}).
-    \item \texttt{request}: Reference to the corresponding \texttt{BuyerRequest}.
-    \item \texttt{store} and \texttt{merchant}: References to the bidding store and owner.
-    \item \texttt{lineItems}: Array of quoted items with \texttt{productName}, \texttt{quantity}, \texttt{unit}, \texttt{unitPrice}, \texttt{lineTotal}, \texttt{inStock}, and \texttt{brandOffered}.
-    \item \texttt{itemsSubtotal}, \texttt{deliveryCharge}, \texttt{tax}, \texttt{grandTotal}: Transparent numerical financial breakdown.
-    \item \texttt{stockConfirmed}: Boolean confirming warehouse or shelf reservation.
-    \item \texttt{proposedDeliveryDate} and \texttt{expiresAt}: Timing commitments.
-    \item \texttt{counterOffer}: Embedded subdocument containing \texttt{proposedGrandTotal}, \texttt{customerNote}, and timestamp if customer negotiates.
-    \item \texttt{revisionHistory}: Archive of previous quotation versions.
+    \item \textbf{\texttt{quotationId}}: Unique identifier code (e.g., \texttt{QUO-20261031-1049}).
+    \item \textbf{\texttt{request}}: Reference to the parent \texttt{BuyerRequest}.
+    \item \textbf{\texttt{store}} and \textbf{\texttt{merchant}}: References to the merchant store and user account.
+    \item \textbf{\texttt{lineItems}}: Array of quoted line items with unit price, stock status, and line totals.
+    \item \textbf{\texttt{itemsSubtotal}}, \textbf{\texttt{deliveryCharge}}, \textbf{\texttt{tax}}, \textbf{\texttt{grandTotal}}: Transparent cost breakdown.
+    \item \textbf{\texttt{stockConfirmed}}: Boolean indicating immediate inventory reservation.
+    \item \textbf{\texttt{proposedDeliveryDate}} and \textbf{\texttt{expiresAt}}: Proposed delivery date and offer expiry.
+    \item \textbf{\texttt{counterOffer}}: Subdocument storing buyer counter-offer and negotiation note.
+    \item \textbf{\texttt{revisionHistory}}: Historical log of updated quote versions.
 \end{itemize}
 
 Figure~\ref{fig:uml} shows the UML Class Diagram highlighting the relationship between these domain models and service engines.

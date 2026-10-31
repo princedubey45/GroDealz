@@ -16,7 +16,32 @@
 \usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, fit, backgrounds}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds, calc}
+\tikzset{
+  tierbox/.style={
+    rectangle,
+    rounded corners=5pt,
+    draw=black!70,
+    line width=0.8pt,
+    font=\small,
+    inner sep=8pt
+  },
+  tierframe/.style={
+    rectangle,
+    rounded corners=6pt,
+    draw=black!60,
+    line width=0.8pt,
+    dashed,
+    inner sep=12pt
+  },
+  arrowflow/.style={
+    -{Latex[length=2.5mm, width=1.8mm]},
+    draw=black!80,
+    line width=0.8pt,
+    shorten >= 6mm,
+    shorten <= 6mm
+  }
+}
 \usepackage{listings}
 \lstdefinelanguage{JavaScript}{
   keywords={break, case, catch, continue, debugger, default, delete, do, else, finally, for, function, if, in, instanceof, new, return, switch, this, throw, try, typeof, var, void, while, with, let, const, async, await},
@@ -128,11 +153,11 @@ Date: November, 2026
 \thispagestyle{empty}
 \begin{center}
 
-    \begin{tabular}{@{}c@{\hspace{14pt}}l@{}}
-        \raisebox{-0.35\height}{\includegraphics[width=2.3cm,keepaspectratio]{figures/iiit_manipur.png}} &
+    \begin{tabular}{@{}c@{\hspace{12pt}}l@{}}
+        \raisebox{-0.32\height}{\includegraphics[width=2.0cm,keepaspectratio]{figures/iiit_manipur.png}} &
         \begin{tabular}{@{}l@{}}
-            \large\textbf{Department of Computer Science and Engineering} \\[0.3em]
-            \large\textbf{Indian Institute of Information Technology Senapati, Manipur}
+            \textbf{\normalsize Department of Computer Science and Engineering} \\[0.25em]
+            \textbf{\normalsize Indian Institute of Information Technology Senapati, Manipur}
         \end{tabular}
     \end{tabular}
 
