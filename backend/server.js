@@ -1,5 +1,7 @@
 // ─── server.js ────────────────────────────────────────────────────────────────
 require('dotenv').config();
+const path          = require('path');
+const fs            = require('fs');
 const express       = require('express');
 const mongoose      = require('mongoose');
 const cors          = require('cors');
@@ -72,6 +74,42 @@ app.use('/api/agent-bridge',    agentBridgeRoutes);
 app.use('/api/proposals',       proposalRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date() }));
+
+// ─── SERVE FRONTEND (SPA) ───────────────────────────────────────────────────
+const frontendBuildPath = path.join(__dirname, '../frontend/build');
+if (fs.existsSync(frontendBuildPath)) {
+  app.use(express.static(frontendBuildPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
+  });
+} else {
+  // If frontend is not built, provide a clean API status page at '/'
+  app.get('/', (_req, res) => {
+    res.json({
+      name: 'GroDealz API & AI Shopping Agent',
+      status: 'online',
+      message: 'GroDealz Backend and Autonomous AI Shopping Agent are active.',
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      endpoints: {
+        health: '/api/health',
+        products: '/api/products',
+        stores: '/api/stores',
+        proposals: '/api/proposals/my',
+        shoppingAgent: '/api/ai/shopping-agent',
+        orders: '/api/orders'
+      }
+    });
+  });
+}
+
+// 404 for unhandled API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: `API route ${req.originalUrl} not found` });
+});
 
 // ─── SOCKET.IO – Real-time order tracking ────────────────────────────────────
 io.on('connection', (socket) => {
