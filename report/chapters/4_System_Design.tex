@@ -16,56 +16,77 @@ Figure~\ref{fig:1tier_2tier} illustrates the fundamental differences between 1-t
 \centering
 \begin{subfigure}[b]{\linewidth}
   \centering
-  \begin{tikzpicture}[node distance=0.85cm]
-    \node[tierbox, fill=orange!10, draw=orange!70!black, minimum width=8.5cm, minimum height=0.75cm, align=center] (p1) {
-      \textbf{Presentation Layer} (User Interface, Forms, Menus)
-    };
-    \node[tierbox, fill=green!10, draw=green!70!black, minimum width=8.5cm, minimum height=0.75cm, below=of p1, align=center] (a1) {
-      \textbf{Application Logic} (Calculations, Validation Rules, Business Logic)
-    };
-    \node[tierbox, fill=purple!10, draw=purple!70!black, minimum width=8.5cm, minimum height=0.75cm, below=of a1, align=center] (d1) {
-      \textbf{Data Layer} (Local Files, Embedded SQLite / Access Database)
-    };
-    
-    \draw[arrowflow, shorten >= 4mm, shorten <= 4mm] (p1.south) -- node[midway, right=6pt, font=\scriptsize, text=black!70] {In-Memory Function Calls} (a1.north);
-    \draw[arrowflow, shorten >= 4mm, shorten <= 4mm] (a1.south) -- node[midway, right=6pt, font=\scriptsize, text=black!70] {Direct File / Embedded DB I/O} (d1.north);
+  \begin{minipage}[c]{0.50\linewidth}
+    \centering
+    \resizebox{0.92\linewidth}{!}{%
+    \begin{tikzpicture}[node distance=0.45cm]
+      \node[tierbox, fill=orange!10, draw=orange!70!black, minimum width=5.0cm, minimum height=0.6cm, align=center] (p1) {
+        \textbf{Presentation Layer} (UI, Forms, Menus)
+      };
+      \node[tierbox, fill=green!10, draw=green!70!black, minimum width=5.0cm, minimum height=0.6cm, below=of p1, align=center] (a1) {
+        \textbf{Application Logic} (Calculations / Validation)
+      };
+      \node[tierbox, fill=purple!10, draw=purple!70!black, minimum width=5.0cm, minimum height=0.6cm, below=of a1, align=center] (d1) {
+        \textbf{Data Layer} (Local Files / SQLite DB)
+      };
+      
+      \draw[arrowflow, shorten >= 2mm, shorten <= 2mm] (p1.south) -- (a1.north);
+      \draw[arrowflow, shorten >= 2mm, shorten <= 2mm] (a1.south) -- (d1.north);
 
-    \begin{scope}[on background layer]
-      \node[tierframe, fill=gray!3, fit=(p1) (a1) (d1), label={[font=\small\bfseries, yshift=-1pt]above:1-Tier: Standalone Personal Computer / Monolith}] {};
-    \end{scope}
-  \end{tikzpicture}
+      \begin{scope}[on background layer]
+        \node[tierframe, fill=gray!3, fit=(p1) (a1) (d1), label={[font=\scriptsize\bfseries, yshift=-2pt]above:Standalone Computer / Monolith}] {};
+      \end{scope}
+    \end{tikzpicture}%
+    }
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.46\linewidth}
+    \textbf{1-Tier Architecture:}\\[0.25em]
+    \small All presentation interface, application logic, and database storage reside on a single standalone machine. It cannot support network collaboration, shared merchant inventory, or multi-buyer ordering.
+  \end{minipage}
+  \vspace{0.15cm}
   \caption{1-Tier Monolithic Model (Single Standalone Machine)}
   \label{fig:1tier}
 \end{subfigure}
 
-\vspace{0.7cm}
+\vspace{0.5cm}
 
 \begin{subfigure}[b]{\linewidth}
   \centering
-  \begin{tikzpicture}[node distance=4.0cm]
-    \node[tierbox, fill=blue!8, draw=blue!70!black, minimum width=4.0cm, minimum height=2.4cm, align=center] (client) {
-      \textbf{Client Tier (``Fat Client'')}\\[0.3em]
-      \rule{3.5cm}{0.4pt}\\[0.4em]
-      Presentation Layer (GUI)\\[0.2em]
-      +\\
-      Application Business Logic\\[0.2em]
-      Embedded DB Credentials
-    };
-    \node[tierbox, fill=purple!8, draw=purple!70!black, minimum width=4.0cm, minimum height=2.4cm, align=center, right=of client] (db) {
-      \textbf{Database Tier (Server)}\\[0.3em]
-      \rule{3.5cm}{0.4pt}\\[0.4em]
-      Central Database Server\\[0.2em]
-      (SQL Server / Oracle / MySQL)\\[0.2em]
-      Shared Data Storage \& Tables
-    };
+  \begin{minipage}[c]{0.50\linewidth}
+    \centering
+    \resizebox{0.95\linewidth}{!}{%
+    \begin{tikzpicture}[node distance=1.8cm]
+      \node[tierbox, fill=blue!8, draw=blue!70!black, minimum width=2.4cm, minimum height=2.1cm, align=center] (client) {
+        \textbf{Client Tier}\\[0.2em]
+        \rule{2.0cm}{0.3pt}\\[0.25em]
+        Presentation (GUI)\\[0.15em]
+        +\\[0.15em]
+        Business Logic\\[0.15em]
+        DB Credentials
+      };
+      \node[tierbox, fill=purple!8, draw=purple!70!black, minimum width=2.4cm, minimum height=2.1cm, align=center, right=of client] (db) {
+        \textbf{Database Tier}\\[0.2em]
+        \rule{2.0cm}{0.3pt}\\[0.25em]
+        Central Database\\[0.15em]
+        Server (RDBMS)\\[0.15em]
+        Shared Storage\\[0.15em]
+        Tables \& Records
+      };
 
-    \draw[arrowflow] ([yshift=10pt]client.east) -- node[midway, above=2pt, font=\scriptsize, align=center] {Direct SQL Queries\\(ODBC / JDBC)} ([yshift=10pt]db.west);
-    \draw[arrowflow] ([yshift=-10pt]db.west) -- node[midway, below=2pt, font=\scriptsize, align=center] {Result Dataset\\(Table Records)} ([yshift=-10pt]client.east);
-  \end{tikzpicture}
+      \draw[arrowflow, shorten >= 3mm, shorten <= 3mm] ([yshift=8pt]client.east) -- node[midway, above, font=\tiny, align=center] {SQL Query\\(ODBC/JDBC)} ([yshift=8pt]db.west);
+      \draw[arrowflow, shorten >= 3mm, shorten <= 3mm] ([yshift=-8pt]db.west) -- node[midway, below, font=\tiny, align=center] {Result Dataset\\(Raw Records)} ([yshift=-8pt]client.east);
+    \end{tikzpicture}%
+    }
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.46\linewidth}
+    \textbf{2-Tier Architecture:}\\[0.25em]
+    \small Fat client machines connect directly over a local network to a central database server. It exposes database credentials inside the client binary and requires client upgrades whenever business logic changes.
+  \end{minipage}
+  \vspace{0.15cm}
   \caption{2-Tier Client-Server Model (Direct Database Connection)}
   \label{fig:2tier}
 \end{subfigure}
-\caption{Architectural Evolution: 1-Tier vs.\ 2-Tier Models}
+\caption{Comparison of 1-Tier and 2-Tier Architectural Models with Functional Descriptions}
 \label{fig:1tier_2tier}
 \end{figure}
 
@@ -142,7 +163,7 @@ To overcome these structural limitations, GroDealz implements a clean \textbf{3-
 
 \end{tikzpicture}%
 }
-\caption{3-Tier High-Level Architecture of the GroDealz Platform}
+\caption{3-Tier High-Level Architecture of the GroDealz Platform. Tier~1 manages customer interactions in React~18, Tier~2 processes quotation algorithms and AI agents in Node.js/Python, and Tier~3 secures relational and document data in MongoDB Atlas.}
 \label{fig:3tier_arch}
 \end{figure}
 
@@ -167,7 +188,7 @@ The database schema connects seven primary collections, as illustrated in the En
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\textwidth,keepaspectratio]{figures/erd.png}
-\caption{Entity-Relationship Diagram (ERD) of GroDealz Database}
+\caption{Entity-Relationship Diagram (ERD) of GroDealz Database. Illustrates relational dependencies across seven primary collections including User, Store, Product, Order, BuyerRequest, MerchantQuotation, and Customer Support.}
 \label{fig:er_diagram}
 \end{figure}
 
@@ -208,7 +229,7 @@ Figure~\ref{fig:uml} shows the UML Class Diagram highlighting the relationship b
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\textwidth,keepaspectratio]{figures/uml.png}
-\caption{UML Class Diagram for GroDealz Domain Entities and Services}
+\caption{UML Class Diagram of System Architecture. Details domain model schemas, controller interfaces, algorithmic quotation engines, and real-time Socket.IO notification rooms.}
 \label{fig:uml}
 \end{figure}
 
@@ -276,9 +297,9 @@ Unlike standard platforms that sort solely by price, GroDealz allows customers t
     \end{equation}
     where:
     \begin{align}
-        S_{\text{price}} &= 50 \times \left( 1 - \frac{\text{grandTotal} - \text{minPrice}}{\text{maxPrice} - \text{minPrice}} \right) \\
-        S_{\text{speed}} &= 30 \times \left( 1 - \frac{t_{\text{delivery}} - t_{\text{earliest}}}{t_{\text{latest}} - t_{\text{earliest}}} \right) \\
-        S_{\text{reputation}} &= \left( \frac{\text{Rating}}{5.0} \right) \times 20
+        &S_{\text{price}} = 50 \times \left( 1 - \frac{\text{grandTotal} - \text{minPrice}}{\text{maxPrice} - \text{minPrice}} \right) \\
+        &S_{\text{speed}} = 30 \times \left( 1 - \frac{t_{\text{delivery}} - t_{\text{earliest}}}{t_{\text{latest}} - t_{\text{earliest}}} \right) \\
+        &S_{\text{reputation}} = \left( \frac{\text{Rating}}{5.0} \right) \times 20
     \end{align}
     If the quoted total is within the customer's target budget, an additional 5-point bonus is applied.
 \end{enumerate}
