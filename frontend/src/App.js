@@ -21,6 +21,8 @@ const AIInsights    = lazy(() => import('./pages/AIInsights'));
 const StoreFinder   = lazy(() => import('./pages/StoreFinder'));
 const AIGroceryPlanner = lazy(() => import('./pages/AIGroceryPlanner'));
 const Support       = lazy(() => import('./pages/Support'));
+const BuyerRFQ      = lazy(() => import('./pages/BuyerRFQ'));
+const MerchantRFQ   = lazy(() => import('./pages/MerchantRFQ'));
 
 const Loader = () => (
   <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',flexDirection:'column',gap:16 }}>
@@ -53,6 +55,8 @@ function App() {
                   <Route path="/ai-planner" element={<AIGroceryPlanner />} />
                   <Route path="/stores"   element={<StoreFinder />} />
                   <Route path="/cart"     element={<PrivateRoute><Cart /></PrivateRoute>} />
+                  <Route path="/buyer-rfq" element={<PrivateRoute><BuyerRFQ /></PrivateRoute>} />
+                  <Route path="/merchant-rfq" element={<PrivateRoute ownerOnly><MerchantRFQ /></PrivateRoute>} />
                   <Route path="/orders"   element={<PrivateRoute><Orders /></PrivateRoute>} />
                   <Route path="/orders/:id" element={<PrivateRoute><OrderDetail /></PrivateRoute>} />
                   <Route path="/dashboard" element={<PrivateRoute ownerOnly><Dashboard /></PrivateRoute>} />

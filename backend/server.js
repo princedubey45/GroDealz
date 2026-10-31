@@ -23,6 +23,7 @@ const ticketRoutes          = require('./routes/tickets');
 const paymentRoutes         = require('./routes/payment');
 const agentBridgeRoutes     = require('./routes/agentBridge');
 const proposalRoutes        = require('./routes/proposals');
+const rfqRoutes             = require('./routes/rfq');
 
 const { runDemandPrediction } = require('./ai/demandPrediction');
 
@@ -72,6 +73,7 @@ app.use('/api/tickets',         ticketRoutes);
 app.use('/api/payment',         paymentRoutes);
 app.use('/api/agent-bridge',    agentBridgeRoutes);
 app.use('/api/proposals',       proposalRoutes);
+app.use('/api/rfq',             rfqRoutes);
 
 const { ensureGroceryCatalog } = require('./services/catalogSeeder');
 
@@ -144,6 +146,16 @@ io.on('connection', (socket) => {
   socket.on('join_ticket', (ticketId) => {
     socket.join(`ticket_${ticketId}`);
     console.log(`🎫 Client joined ticket chat: ${ticketId}`);
+  });
+
+  socket.on('join_rfq', (requestId) => {
+    socket.join(`rfq_${requestId}`);
+    console.log(`📋 Client joined RFQ room: ${requestId}`);
+  });
+
+  socket.on('join_merchants_rfq', () => {
+    socket.join('merchants_rfq');
+    console.log('🏪 Merchant joined merchants_rfq room');
   });
 
   socket.on('send_message', async (data) => {
