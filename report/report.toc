@@ -1,6 +1,6 @@
-\contentsline {chapter}{List of Figures}{v}{chapter*.3}%
-\contentsline {chapter}{List of Tables}{vi}{chapter*.4}%
-\contentsline {chapter}{List of Abbreviations}{1}{chapter*.5}%
+\contentsline {chapter}{List of Figures}{v}{chapter*.2}%
+\contentsline {chapter}{List of Tables}{vi}{chapter*.3}%
+\contentsline {chapter}{List of Abbreviations}{1}{chapter*.4}%
 \contentsline {chapter}{\numberline {1}Introduction}{2}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Problem Statement}{3}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Objectives of the Project}{3}{section.1.2}%
@@ -67,4 +67,4 @@
 \contentsline {section}{\numberline {7.2}Practical Impact and Regional Relevance}{34}{section.7.2}%
 \contentsline {section}{\numberline {7.3}Current Limitations}{34}{section.7.3}%
 \contentsline {section}{\numberline {7.4}Future Scope}{35}{section.7.4}%
-\contentsline {chapter}{Bibliography}{36}{chapter*.17}%
+\contentsline {chapter}{Bibliography}{36}{chapter*.16}%

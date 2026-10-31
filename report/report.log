@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.4.27)  31 OCT 2026 22:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.4.27)  31 OCT 2026 22:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1128,94 +1128,95 @@ been already used, duplicate ignored
                    \relax 
 l.124 \newpage
                [1]
-File: figures/iiit_manipur.png Graphic file (type png)
-<use figures/iiit_manipur.png>
-Package pdftex.def Info: figures/iiit_manipur.png  used on input line 132.
-(pdftex.def)             Requested size: 46.2508pt x 35.59143pt.
 LaTeX Font Info:    Font shape `T1/fnc/m/n' will be
-(Font)              scaled to size 9.29993pt on input line 133.
+(Font)              scaled to size 9.29993pt on input line 131.
 LaTeX Font Info:    Font shape `T1/fnc/m/n' will be
-(Font)              scaled to size 7.06795pt on input line 133.
+(Font)              scaled to size 7.06795pt on input line 131.
 LaTeX Font Info:    Font shape `T1/fnc/m/n' will be
-(Font)              scaled to size 5.57996pt on input line 133.
+(Font)              scaled to size 5.57996pt on input line 131.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 9.19998pt on input line 133.
+(Font)              scaled to size 9.19998pt on input line 131.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 6.99199pt on input line 133.
+(Font)              scaled to size 6.99199pt on input line 131.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 5.51999pt on input line 133.
+(Font)              scaled to size 5.51999pt on input line 131.
 LaTeX Font Info:    Trying to load font information for FML+fncm on input line 
-133.
+131.
 
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/fouriernc/fmlfncm.fd
 File: fmlfncm.fd 2005/12/20 Fontinst v1.928 font definitions for FML/fncm.
 )
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 9.19998pt on input line 133.
+(Font)              scaled to size 9.19998pt on input line 131.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 6.99199pt on input line 133.
+(Font)              scaled to size 6.99199pt on input line 131.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 5.51999pt on input line 133.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 133
+(Font)              scaled to size 5.51999pt on input line 131.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 131
 .
 
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 133
+LaTeX Font Info:    Trying to load font information for U+msb on input line 131
 .
 
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Font shape `T1/fnc/m/n' will be
-(Font)              scaled to size 23.13821pt on input line 142.
-LaTeX Font Info:    Font shape `T1/fnc/b/n' will be
-(Font)              scaled to size 23.13821pt on input line 142.
-LaTeX Font Info:    Font shape `T1/fnc/b/it' will be
-(Font)              scaled to size 23.13821pt on input line 142.
+File: figures/iiit_manipur.png Graphic file (type png)
+<use figures/iiit_manipur.png>
+Package pdftex.def Info: figures/iiit_manipur.png  used on input line 132.
+(pdftex.def)             Requested size: 65.44142pt x 50.35783pt.
 
-Underfull \hbox (badness 1783) in paragraph at lines 145--150
+Overfull \hbox (109.10458pt too wide) in paragraph at lines 131--138
+ [] 
+ []
+
+LaTeX Font Info:    Font shape `T1/fnc/b/it' will be
+(Font)              scaled to size 19.28804pt on input line 146.
+
+Underfull \hbox (badness 1783) in paragraph at lines 150--155
 \T1/fnc/b/n/14.4 TI-MIZER AND MER-CHANT QUO-TA-TION PLAT-FORM''
  []
 
 LaTeX Font Info:    Font shape `T1/fnc/m/n' will be
-(Font)              scaled to size 8.36993pt on input line 153.
+(Font)              scaled to size 8.36993pt on input line 158.
 LaTeX Font Info:    Font shape `T1/fnc/m/n' will be
-(Font)              scaled to size 6.50995pt on input line 153.
+(Font)              scaled to size 6.50995pt on input line 158.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 11.03998pt on input line 153.
+(Font)              scaled to size 11.03998pt on input line 158.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 8.27998pt on input line 153.
+(Font)              scaled to size 8.27998pt on input line 158.
 LaTeX Font Info:    Font shape `FMX/futm/m/n' will be
-(Font)              scaled to size 6.43999pt on input line 153.
+(Font)              scaled to size 6.43999pt on input line 158.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 11.03998pt on input line 153.
+(Font)              scaled to size 11.03998pt on input line 158.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 8.27998pt on input line 153.
+(Font)              scaled to size 8.27998pt on input line 158.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 6.43999pt on input line 153.
-
-Underfull \hbox (badness 10000) in paragraph at lines 160--164
-
- []
-
-[2] [3]
+(Font)              scaled to size 6.43999pt on input line 158.
+[2]
 LaTeX Font Info:    Font shape `T1/fnc/m/it' will be
-(Font)              scaled to size 11.15991pt on input line 172.
+(Font)              scaled to size 11.15991pt on input line 178.
 
 pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has 
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.177 \end{abstract}
+l.183 \end{abstract}
                      [1]
 pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has 
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.205 \tableofcontents
-                       [1] (./report.toc
+l.211 \tableofcontents
+                       [1]
+LaTeX Font Info:    Font shape `T1/fnc/m/n' will be
+(Font)              scaled to size 23.13821pt on input line 211.
+LaTeX Font Info:    Font shape `T1/fnc/b/n' will be
+(Font)              scaled to size 23.13821pt on input line 211.
+ (./report.toc
 pdfTeX warning (ext4): destination with the same identifier (name{page.ii}) has
  been already used, duplicate ignored
 <to be read again> 
@@ -1223,23 +1224,17 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.ii}) has
 l.28 ...rt CRM (FR-SUPPORT)}{13}{subsection.3.2.7}
                                                   % [2
 
-]
-pdfTeX warning (ext4): destination with the same identifier (name{page.iii}) ha
-s been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.63 ...ing Sensitivity Analysis}{30}{section.6.3}
-                                                  % [3{/usr/local/texlive/2026b
-asic/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}])
+] [3{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/cm-super/cm-super-
+t1.enc}])
 \tf@toc=\write6
 \openout6 = `report.toc'.
 
- [4] (./report.lof)
+ [4]
+(./report.lof)
 \tf@lof=\write7
 \openout7 = `report.lof'.
 
-
-[5
+ [5
 
 ] (./report.lot)
 \tf@lot=\write8
@@ -1249,9 +1244,9 @@ asic/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}])
 
 ]
 LaTeX Font Info:    Font shape `T1/fnc/b/n' will be
-(Font)              scaled to size 9.29993pt on input line 216.
+(Font)              scaled to size 9.29993pt on input line 222.
 
-Overfull \hbox (1.2376pt too wide) in paragraph at lines 215--240
+Overfull \hbox (1.2376pt too wide) in paragraph at lines 221--246
  [] 
  []
 
@@ -1385,7 +1380,7 @@ Underfull \hbox (badness 3343) in paragraph at lines 61--61
 [12] [13]) [14]
 Chapter 4.
 (./chapters/4_System_Design.tex
-<figures/three_tier.png, id=555, 1541.76pt x 1027.84pt>
+<figures/three_tier.png, id=550, 1541.76pt x 1027.84pt>
 File: figures/three_tier.png Graphic file (type png)
 <use figures/three_tier.png>
 Package pdftex.def Info: figures/three_tier.png  used on input line 13.
@@ -1395,7 +1390,7 @@ Package pdftex.def Info: figures/three_tier.png  used on input line 13.
  <./figures/three_tier.png (PNG copy)>]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
 (Font)              Font shape `T1/cmtt/m/n' tried instead on input line 24.
-<figures/erd.png, id=562, 1541.76pt x 1027.84pt>
+<figures/erd.png, id=558, 1541.76pt x 1027.84pt>
 File: figures/erd.png Graphic file (type png)
 <use figures/erd.png>
 Package pdftex.def Info: figures/erd.png  used on input line 36.
@@ -1429,7 +1424,7 @@ Underfull \hbox (badness 5331) in paragraph at lines 69--70
  []
 
 [17]
-<figures/uml.png, id=576, 1541.76pt x 1027.84pt>
+<figures/uml.png, id=572, 1541.76pt x 1027.84pt>
 File: figures/uml.png Graphic file (type png)
 <use figures/uml.png>
 Package pdftex.def Info: figures/uml.png  used on input line 77.
@@ -1509,7 +1504,7 @@ Underfull \hbox (badness 1895) in paragraph at lines 11--11
 []\T1/fnc/b/n/14.4 GroDealz Home and Per-son-al-ized Rec-om-men-da-
  []
 
-<figures/screenshot_home.png, id=651, 1027.84pt x 667.49374pt>
+<figures/screenshot_home.png, id=647, 1027.84pt x 667.49374pt>
 File: figures/screenshot_home.png Graphic file (type png)
 <use figures/screenshot_home.png>
 Package pdftex.def Info: figures/screenshot_home.png  used on input line 17.
@@ -1517,21 +1512,21 @@ Package pdftex.def Info: figures/screenshot_home.png  used on input line 17.
 [25
 
 ]
-<figures/screenshot_ai_planner.png, id=658, 1027.84pt x 667.49374pt>
+<figures/screenshot_ai_planner.png, id=654, 1027.84pt x 667.49374pt>
 File: figures/screenshot_ai_planner.png Graphic file (type png)
 <use figures/screenshot_ai_planner.png>
 Package pdftex.def Info: figures/screenshot_ai_planner.png  used on input line 
 37.
 (pdftex.def)             Requested size: 387.87068pt x 251.88823pt.
  [26 <./figures/screenshot_home.png>]
-<figures/screenshot_buyer_rfq.png, id=666, 1027.84pt x 667.49374pt>
+<figures/screenshot_buyer_rfq.png, id=661, 1027.84pt x 667.49374pt>
 File: figures/screenshot_buyer_rfq.png Graphic file (type png)
 <use figures/screenshot_buyer_rfq.png>
 Package pdftex.def Info: figures/screenshot_buyer_rfq.png  used on input line 5
 7.
 (pdftex.def)             Requested size: 387.87068pt x 251.88823pt.
  [27 <./figures/screenshot_ai_planner.png>]
-<figures/screenshot_support.png, id=674, 1027.84pt x 667.49374pt>
+<figures/screenshot_support.png, id=670, 1027.84pt x 667.49374pt>
 File: figures/screenshot_support.png Graphic file (type png)
 <use figures/screenshot_support.png>
 Package pdftex.def Info: figures/screenshot_support.png  used on input line 77.
@@ -1637,16 +1632,16 @@ LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: 780BBF85DA73D5340EAE5289BBADBE55;16386.
+(rerunfilecheck)             Checksum: 786A78526050E9D2F6945FE5D2422D65;16386.
  ) 
 Here is how much of TeX's memory you used:
- 26330 strings out of 469006
- 478347 string characters out of 5454813
- 959814 words of memory out of 5000000
+ 26329 strings out of 469006
+ 478331 string characters out of 5454813
+ 959813 words of memory out of 5000000
  54303 multiletter control sequences out of 15000+600000
  714903 words of font info for 153 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 84i,13n,94p,806b,1313s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,15n,94p,806b,1313s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/fourier/fourier-m
 ex.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/fourier/four
 ier-ml.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/fourier/
@@ -1659,10 +1654,10 @@ pe1/urw/ncntrsbk/uncb8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type
 1/urw/ncntrsbk/uncbi8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1
 /urw/ncntrsbk/uncr8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/u
 rw/ncntrsbk/uncri8a.pfb>
-Output written on report.pdf (47 pages, 5270804 bytes).
+Output written on report.pdf (46 pages, 5270513 bytes).
 PDF statistics:
- 828 PDF objects out of 1000 (max. 8388607)
- 736 compressed objects within 8 object streams
- 224 named destinations out of 1000 (max. 500000)
+ 824 PDF objects out of 1000 (max. 8388607)
+ 733 compressed objects within 8 object streams
+ 223 named destinations out of 1000 (max. 500000)
  613 words of extra memory for PDF output out of 10000 (max. 10000000)
 
