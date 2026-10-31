@@ -129,7 +129,7 @@ To verify that the quotation engine does not simply pick the cheapest bid under 
 \centering
 \caption{Dynamic Ranking Output Across Different Customer Priorities}
 \label{tab:ranking_sensitivity}
-\begin{tabular}{p{3.2cm} p{2.2cm} p{2.4cm} p{2.4cm} p{2.6cm}}
+\begin{tabular}{p{2.9cm} p{2.1cm} p{2.3cm} p{2.2cm} >{\raggedright\arraybackslash}p{3.2cm}}
 \toprule
 \textbf{Store Bid} & \textbf{Grand Total} & \textbf{Delivery Time} & \textbf{Store Rating} & \textbf{Ranked Position} \\
 \midrule
@@ -166,7 +166,7 @@ The system response times were recorded across key API endpoints and WebSocket c
 \centering
 \caption{Measured System Response Times and Event Latency}
 \label{tab:latency_benchmarks}
-\begin{tabular}{p{6.5cm} p{3cm} p{3cm}}
+\begin{tabular}{p{7.2cm} c c}
 \toprule
 \textbf{Endpoint / Operation} & \textbf{Mean Response Time} & \textbf{p99 Latency} \\
 \midrule
