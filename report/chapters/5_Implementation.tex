@@ -127,20 +127,20 @@ The workflow state is defined as an immutable data contract passing typed state 
 
 \begin{table}[H]
 \centering
-\caption{Specification of LangGraph Workflow State Channels (\texttt{AgentState})}
+\caption{Specification of LangGraph Workflow State Channels (AgentState)}
 \label{tab:agent_state}
 \begin{tabular}{>{\raggedright\arraybackslash}p{4.45cm} >{\raggedright\arraybackslash}p{2.1cm} >{\raggedright\arraybackslash}p{7.45cm}}
 \toprule
 \textbf{State Channel} & \textbf{Data Type} & \textbf{Operational Function} \\
 \midrule
-\texttt{raw\_query} & \texttt{str} & Unprocessed natural language prompt entered by user \\
-\texttt{requirements} & \texttt{Dict[str, Any]} & Validated parameters ($N$, $D$, target budget, dietary tags) \\
-\texttt{raw\_candidates} & \texttt{List[Dict]} & Candidate product records retrieved across store adapters \\
-\texttt{normalized\_candidates} & \texttt{List[Dict]} & Items with unified metric units and price-per-quantity \\
-\texttt{optimized\_strategies} & \texttt{Dict[str, Any]} & Single-store baseline vs.\ multi-store split cost metrics \\
-\texttt{proposal} & \texttt{Dict[str, Any]} & Audited picking itinerary, savings proof, and store route \\
-\texttt{status} & \texttt{str} & Lifecycle state indicator (\texttt{extracted}, \texttt{optimized}, etc.) \\
-\texttt{errors} & \texttt{List[str]} & Fault-tolerance error log for graceful fallback execution \\
+raw\_query & str & Unprocessed natural language prompt entered by user \\
+requirements & Dict[str, Any] & Validated parameters ($N$, $D$, target budget, dietary tags) \\
+raw\_candidates & List[Dict] & Candidate product records retrieved across store adapters \\
+normalized\_candidates & List[Dict] & Items with unified metric units and price-per-quantity \\
+optimized\_strategies & Dict[str, Any] & Single-store baseline vs.\ multi-store split cost metrics \\
+proposal & Dict[str, Any] & Audited picking itinerary, savings proof, and store route \\
+status & str & Lifecycle state indicator (extracted, optimized, etc.) \\
+errors & List[str] & Fault-tolerance error log for graceful fallback execution \\
 \bottomrule
 \end{tabular}
 \end{table}

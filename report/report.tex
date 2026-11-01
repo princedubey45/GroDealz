@@ -7,7 +7,6 @@
 \DeclareUnicodeCharacter{20B9}{\text{Rs.\,}}
 \usepackage[T1]{fontenc}
 \usepackage{fouriernc}
-\usepackage{courier}
 \usepackage{subcaption}
 \usepackage{longtable}
 \usepackage[nottoc]{tocbibind}
@@ -79,6 +78,12 @@
 \usepackage[font={normalsize,up},labelfont={bf,normalsize}]{caption}
 \renewcommand{\emph}[1]{\textbf{#1}}
 \renewcommand{\textit}[1]{\textbf{#1}}
+\let\itshape\upshape
+\let\it\upshape
+\DeclareRobustCommand\em{\upshape}
+\renewcommand{\texttt}[1]{#1}
+\renewcommand{\ttdefault}{\rmdefault}
+\urlstyle{same}
 \renewcommand{\arraystretch}{1.1}
 \setlength{\parskip}{0.3em}
 \setlength{\parindent}{0pt}
