@@ -94,9 +94,9 @@ Figure~\ref{fig:1tier_2tier} illustrates the fundamental differences between 1-t
     \item \textbf{1-Tier Architecture (Monolithic):} In a 1-tier architecture, the presentation layer, application business logic, and database storage reside on the exact same physical computer (for example, a traditional desktop application using an embedded SQLite or Microsoft Access database). While this model requires zero network overhead, it is completely unsuitable for a multi-store grocery platform: multiple customers, store owners, and delivery riders cannot coordinate shared inventory, live orders, or real-time bids on a standalone machine.
     \item \textbf{2-Tier Architecture (Traditional Client-Server):} In a 2-tier architecture, the presentation interface and application business logic run together on a ``fat client'' machine, which communicates directly over a local network or VPN to a centralized database server using database connection protocols (such as ODBC or JDBC). While this enables shared data storage, it introduces critical vulnerabilities:
     \begin{itemize}
-        \item \emph{Security Risk:} Embedding direct database credentials within the client application exposes the core database to tampering.
-        \item \emph{Tight Coupling and Maintenance Burden:} Any modification to business logic, pricing rules, or quotation ranking algorithms requires updating the client software on every user's device.
-        \item \emph{Poor Scalability for AI Tasks:} Complex computations---such as cross-store basket optimization and demand forecasting---would consume local client device memory and cannot easily leverage server-side parallelism.
+        \item \textbf{Security Risk:} Embedding direct database credentials within the client application exposes the core database to tampering.
+        \item \textbf{Tight Coupling and Maintenance Burden:} Any modification to business logic, pricing rules, or quotation ranking algorithms requires updating the client software on every user's device.
+        \item \textbf{Poor Scalability for AI Tasks:} Complex computations---such as cross-store basket optimization and demand forecasting---would consume local client device memory and cannot easily leverage server-side parallelism.
     \end{itemize}
 \end{enumerate}
 
@@ -173,10 +173,10 @@ The responsibilities of each tier are defined as follows:
     \item \textbf{Tier 1 --- Presentation Tier (Client):} Built as a lightweight, reactive Single-Page Application (SPA) using React 18. The presentation tier manages local state (such as the cart, user login status, active filters, and navigation paths) and renders the dark-mode responsive interface. It communicates with Tier~2 exclusively over secure HTTPS REST endpoints and persistent WebSocket channels, ensuring that no database credentials or internal business formulas are exposed to the client.
     \item \textbf{Tier 2 --- Application and AI Logic Tier (Server):} Implemented using Node.js with Express~4 and Python 3.10 with FastAPI/LangGraph. This tier acts as the centralized brain of the platform:
     \begin{itemize}
-        \item \emph{Security \& Authentication:} Validates cryptographic JWT signatures on incoming requests and enforces role-based authorization (customer vs.\ store owner vs.\ admin).
-        \item \emph{Quotation Engine (Module B):} Evaluates line-item mathematics, computes dynamic ranking scores across customer-selected criteria, manages counter-offers, and coordinates atomic order conversion.
-        \item \emph{Autonomous Shopping Agent:} Executes LangGraph decision graphs to search cross-store catalogs, verify inventory, optimize multi-store baskets, and compile picking itineraries.
-        \item \emph{Real-Time Event Dispatcher:} Manages Socket.IO connection rooms (\texttt{merchants\_rfq}, \texttt{rfq\_<id>}, \texttt{order\_<id>}) to broadcast instantaneous updates without client polling.
+        \item \textbf{Security \& Authentication:} Validates cryptographic JWT signatures on incoming requests and enforces role-based authorization (customer vs.\ store owner vs.\ admin).
+        \item \textbf{Quotation Engine (Module B):} Evaluates line-item mathematics, computes dynamic ranking scores across customer-selected criteria, manages counter-offers, and coordinates atomic order conversion.
+        \item \textbf{Autonomous Shopping Agent:} Executes LangGraph decision graphs to search cross-store catalogs, verify inventory, optimize multi-store baskets, and compile picking itineraries.
+        \item \textbf{Real-Time Event Dispatcher:} Manages Socket.IO connection rooms (\textbf{merchants\_rfq}, \textbf{rfq\_<id>}, \textbf{order\_<id>}) to broadcast instantaneous updates without client polling.
     \end{itemize}
     \item \textbf{Tier 3 --- Data Persistence Tier (Database):} Managed by MongoDB Atlas via the Mongoose Object Document Mapper (ODM). Tier~3 guarantees transactional persistence, document validation, and high-performance querying through compound indexes on frequently queried fields. Direct database access is strictly isolated to Tier~2 through private database URIs.
 \end{enumerate}
@@ -197,31 +197,31 @@ In addition to the standard User, Product, Store, and Order collections, GroDeal
 \subsection{Buyer Request Schema}
 Stores custom customer shopping requirements:
 \begin{itemize}
-    \item \textbf{Request Identifier (\textit{requestId}):} Unique identifier code (e.g., RFQ-20261031-4821).
-    \item \textbf{Customer Reference (\textit{customer}):} Reference to the User ID of the buyer.
-    \item \textbf{Requirement Title (\textit{title}):} Short requirement summary (e.g., ``25 kg Basmati Rice for Hostel'').
-    \item \textbf{Raw Prompt (\textit{rawPrompt}):} Raw natural language prompt entered by the buyer.
-    \item \textbf{Requested Items (\textit{items}):} Structured array of requested items with quantities, units, and brand preferences.
-    \item \textbf{Target Budget (\textit{budget}):} Optional numerical target budget in Indian Rupees.
-    \item \textbf{Budget Sharing Flag (\textit{shareBudgetWithMerchants}):} Boolean flag to share target budget with bidding merchants.
-    \item \textbf{Delivery Deadline (\textit{deliveryDeadline}):} Required delivery completion timestamp.
-    \item \textbf{Ranking Priority (\textit{rankingPriority}):} Chosen sorting criterion (price, delivery, rating, or balanced).
-    \item \textbf{RFQ Status (\textit{status}):} Current state (\textit{open}, \textit{quotes\_received}, \textit{negotiating}, \textit{accepted}, \textit{expired}).
-    \item \textbf{Converted Order Reference (\textit{convertedOrderId}):} Reference to the created order when quotation is accepted.
+    \item \textbf{Request Identifier (requestId):} Unique identifier code (e.g., RFQ-20261031-4821).
+    \item \textbf{Customer Reference (customer):} Reference to the User ID of the buyer.
+    \item \textbf{Requirement Title (title):} Short requirement summary (e.g., ``25 kg Basmati Rice for Hostel'').
+    \item \textbf{Raw Prompt (rawPrompt):} Raw natural language prompt entered by the buyer.
+    \item \textbf{Requested Items (items):} Structured array of requested items with quantities, units, and brand preferences.
+    \item \textbf{Target Budget (budget):} Optional numerical target budget in Indian Rupees.
+    \item \textbf{Budget Sharing Flag (shareBudgetWithMerchants):} Boolean flag to share target budget with bidding merchants.
+    \item \textbf{Delivery Deadline (deliveryDeadline):} Required delivery completion timestamp.
+    \item \textbf{Ranking Priority (rankingPriority):} Chosen sorting criterion (price, delivery, rating, or balanced).
+    \item \textbf{RFQ Status (status):} Current state (\textbf{open}, \textbf{quotes\_received}, \textbf{negotiating}, \textbf{accepted}, \textbf{expired}).
+    \item \textbf{Converted Order Reference (convertedOrderId):} Reference to the created order when quotation is accepted.
 \end{itemize}
 
 \subsection{Merchant Quotation Schema}
 Stores itemized quotations submitted by competing store owners:
 \begin{itemize}
-    \item \textbf{Quotation Identifier (\textit{quotationId}):} Unique identifier code (e.g., QUO-20261031-1049).
-    \item \textbf{Parent Request Reference (\textit{request}):} Reference to the parent Buyer Request.
-    \item \textbf{Store and Merchant References (\textit{store}, \textit{merchant}):} References to the merchant store and user account.
-    \item \textbf{Quoted Line Items (\textit{lineItems}):} Array of quoted line items with unit price, stock status, and line totals.
-    \item \textbf{Financial Totals (\textit{itemsSubtotal}, \textit{deliveryCharge}, \textit{tax}, \textit{grandTotal}):} Transparent cost breakdown.
-    \item \textbf{Stock Confirmation Flag (\textit{stockConfirmed}):} Boolean indicating immediate inventory reservation.
-    \item \textbf{Delivery Schedule and Validity (\textit{proposedDeliveryDate}, \textit{expiresAt}):} Proposed delivery date and offer expiry.
-    \item \textbf{Buyer Counter-Offer Subdocument (\textit{counterOffer}):} Subdocument storing buyer counter-offer and negotiation note.
-    \item \textbf{Revision History (\textit{revisionHistory}):} Historical audit log of updated quote versions.
+    \item \textbf{Quotation Identifier (quotationId):} Unique identifier code (e.g., QUO-20261031-1049).
+    \item \textbf{Parent Request Reference (request):} Reference to the parent Buyer Request.
+    \item \textbf{Store and Merchant References (store, merchant):} References to the merchant store and user account.
+    \item \textbf{Quoted Line Items (lineItems):} Array of quoted line items with unit price, stock status, and line totals.
+    \item \textbf{Financial Totals (itemsSubtotal, deliveryCharge, tax, grandTotal):} Transparent cost breakdown.
+    \item \textbf{Stock Confirmation Flag (stockConfirmed):} Boolean indicating immediate inventory reservation.
+    \item \textbf{Delivery Schedule and Validity (proposedDeliveryDate, expiresAt):} Proposed delivery date and offer expiry.
+    \item \textbf{Buyer Counter-Offer Subdocument (counterOffer):} Subdocument storing buyer counter-offer and negotiation note.
+    \item \textbf{Revision History (revisionHistory):} Historical audit log of updated quote versions.
 \end{itemize}
 
 Figure~\ref{fig:uml} shows the UML Class Diagram highlighting the relationship between these domain models and service engines.
@@ -235,7 +235,7 @@ Figure~\ref{fig:uml} shows the UML Class Diagram highlighting the relationship b
 
 \section{Autonomous AI Shopping Agent Workflow}
 
-The Autonomous AI Grocery Shopping Agent (accessible on \texttt{/ai-planner}) operates as a state-machine graph implemented via LangGraph. When a user submits an informal shopping goal (such as \emph{``Party snacks and beverages for 5 people under ₹600''}), execution proceeds through five sequential nodes:
+The Autonomous AI Grocery Shopping Agent (accessible on \texttt{/ai-planner}) operates as a state-machine graph implemented via LangGraph. When a user submits an informal shopping goal (such as \textbf{``Party snacks and beverages for 5 people under ₹600''}), execution proceeds through five sequential nodes:
 
 \begin{enumerate}
     \item \textbf{Parameter Extraction Node:} Employs structured natural language parsing to extract the target count of individuals ($N=5$), planning duration ($D=3\text{ days}$), maximum target budget ($B=₹600$), dietary constraints, and item categories.
@@ -267,25 +267,25 @@ Merchants cannot simply quote an arbitrary lump sum; they must submit unit price
 Unlike standard platforms that sort solely by price, GroDealz allows customers to rank bids based on their immediate priority:
 
 \begin{enumerate}
-    \item \textbf{Lowest Price Mode (\textit{lowest\_price}):} Evaluates grand total cost. The lowest grand total receives the highest ranking score:
+    \item \textbf{Lowest Price Mode (lowest\_price):} Evaluates grand total cost. The lowest grand total receives the highest ranking score:
     \begin{equation}
         \text{Score}_{\text{price}} = 1{,}000{,}000 - \text{grandTotal}
     \end{equation}
-    The merchant with the minimum total is awarded the badge \emph{``Lowest Total Price.''}
+    The merchant with the minimum total is awarded the badge \textbf{``Lowest Total Price.''}
     
-    \item \textbf{Fastest Delivery Mode (\textit{fastest\_delivery}):} Evaluates the proposed delivery timestamp ($t_{\text{delivery}}$). Bids proposing earlier delivery receive higher scores:
+    \item \textbf{Fastest Delivery Mode (fastest\_delivery):} Evaluates the proposed delivery timestamp ($t_{\text{delivery}}$). Bids proposing earlier delivery receive higher scores:
     \begin{equation}
         \text{Score}_{\text{delivery}} = T_{\text{future}} - t_{\text{delivery}}
     \end{equation}
-    The earliest delivery bid receives the badge \emph{``Fastest Delivery.''}
+    The earliest delivery bid receives the badge \textbf{``Fastest Delivery.''}
     
-    \item \textbf{Top Rated Store Mode (\textit{highest\_rated}):} Prioritizes merchant reliability based on customer reviews and ratings:
+    \item \textbf{Top Rated Store Mode (highest\_rated):} Prioritizes merchant reliability based on customer reviews and ratings:
     \begin{equation}
         \text{Score}_{\text{rating}} = (\text{Rating} \times 1{,}000) + \min(\text{ReviewCount}, 100)
     \end{equation}
-    The highest-rated vendor is highlighted with the badge \emph{``Top Rated Store.''}
+    The highest-rated vendor is highlighted with the badge \textbf{``Top Rated Store.''}
     
-    \item \textbf{Balanced Composite Mode (\textit{balanced}):} Combines price, delivery speed, and store reputation into a normalized 100-point composite score:
+    \item \textbf{Balanced Composite Mode (balanced):} Combines price, delivery speed, and store reputation into a normalized 100-point composite score:
     \begin{equation}
         \text{Score}_{\text{balanced}} = S_{\text{price}} (50\text{ pts}) + S_{\text{speed}} (30\text{ pts}) + S_{\text{reputation}} (20\text{ pts})
     \end{equation}
@@ -302,7 +302,7 @@ Unlike standard platforms that sort solely by price, GroDealz allows customers t
 
 To provide instantaneous notifications without inefficient browser polling, GroDealz utilizes Socket.IO rooms:
 \begin{itemize}
-    \item \textbf{Request Notification Room (\textit{join\_rfq}):} Customer joins a private room for their request. When a merchant submits or revises a quote, the server emits a \textit{quote\_update} event.
-    \item \textbf{Merchant RFQ Broadcast Room (\textit{join\_merchants\_rfq}):} Merchants join a collective broadcast room. When a customer posts a new requirement, the server emits a \textit{new\_rfq\_available} notification.
-    \item \textbf{Order Status Tracking Room (\textit{track\_order}):} Customers track real-time order status transitions (\emph{placed $\to$ confirmed $\to$ delivered}).
+    \item \textbf{Request Notification Room (join\_rfq):} Customer joins a private room for their request. When a merchant submits or revises a quote, the server emits a \textbf{quote\_update} event.
+    \item \textbf{Merchant RFQ Broadcast Room (join\_merchants\_rfq):} Merchants join a collective broadcast room. When a customer posts a new requirement, the server emits a \textbf{new\_rfq\_available} notification.
+    \item \textbf{Order Status Tracking Room (track\_order):} Customers track real-time order status transitions (\textbf{placed} $\to$ \textbf{confirmed} $\to$ \textbf{delivered}).
 \end{itemize}

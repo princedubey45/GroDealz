@@ -148,12 +148,12 @@ The workflow state is defined as an immutable data contract passing typed state 
 \subsection{Graph Node Pipeline and Execution Flow}
 The decision graph executes six sequential operational nodes:
 \begin{enumerate}
-    \item \textbf{Requirement Extraction Node (\textit{extract\_requirements\_node}):} Invokes an LLM prompt with strict Pydantic output parsing (\texttt{ShoppingRequirements}) to extract household size, planning duration, target budget, and item lists.
-    \item \textbf{Sanity Validation Node (\textit{validate\_requirements\_node}):} Performs sanity validation. If the customer submits an open-ended goal (e.g., \emph{``Groceries for 3 days''}) without specific items, it dynamically injects baseline staples (vegetables, rice, milk, dal, bread) scaled by family size.
-    \item \textbf{Multi-Store Search Node (\textit{multi\_store\_search\_node}):} Iterates through needed items and calls \texttt{store\_registry.parallel\_search()}, executing concurrent asynchronous HTTP requests across all registered store adapters (FreshMart Central, QuickBazaar, Paona Supermarket).
-    \item \textbf{Item Normalization Node (\textit{normalize\_items\_node}):} Unifies unit representations across stores (e.g., converting grams to kilograms, and matching brand variations).
-    \item \textbf{Basket Optimization Node (\textit{optimize\_basket\_node}):} Computes total costs for each individual store ($C_{\text{single}}$) and calculates the optimal cross-store partition ($C_{\text{multi}}$) by greedily picking the lowest price per item while adding delivery fees ($F_s$) for each distinct store visited.
-    \item \textbf{Proposal Generation Node (\textit{generate\_proposal\_node}):} Assembles the final structured response containing the Store Journey Audit, itemized picking breakdown per vendor, and proof of net savings ($\Delta_{\text{savings}}$).
+    \item \textbf{Requirement Extraction Node (extract\_requirements\_node):} Invokes an LLM prompt with strict Pydantic output parsing (\texttt{ShoppingRequirements}) to extract household size, planning duration, target budget, and item lists.
+    \item \textbf{Sanity Validation Node (validate\_requirements\_node):} Performs sanity validation. If the customer submits an open-ended goal (e.g., \textbf{``Groceries for 3 days''}) without specific items, it dynamically injects baseline staples (vegetables, rice, milk, dal, bread) scaled by family size.
+    \item \textbf{Multi-Store Search Node (multi\_store\_search\_node):} Iterates through needed items and calls \texttt{store\_registry.parallel\_search()}, executing concurrent asynchronous HTTP requests across all registered store adapters (FreshMart Central, QuickBazaar, Paona Supermarket).
+    \item \textbf{Item Normalization Node (normalize\_items\_node):} Unifies unit representations across stores (e.g., converting grams to kilograms, and matching brand variations).
+    \item \textbf{Basket Optimization Node (optimize\_basket\_node):} Computes total costs for each individual store ($C_{\text{single}}$) and calculates the optimal cross-store partition ($C_{\text{multi}}$) by greedily picking the lowest price per item while adding delivery fees ($F_s$) for each distinct store visited.
+    \item \textbf{Proposal Generation Node (generate\_proposal\_node):} Assembles the final structured response containing the Store Journey Audit, itemized picking breakdown per vendor, and proof of net savings ($\Delta_{\text{savings}}$).
 \end{enumerate}
 
 Algorithm~\ref{alg:langgraph_pipeline} defines the end-to-end execution loop of the compiled LangGraph workflow:
