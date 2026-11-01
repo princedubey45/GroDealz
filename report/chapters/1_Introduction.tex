@@ -57,6 +57,29 @@ The scope of this project encompasses:
 
 Items outside the immediate scope of this academic prototype include native mobile applications (iOS/Android APKs) and direct bank-integrated payment gateways. All monetary transactions in the prototype are simulated or use Cash on Delivery (COD) workflows.
 
+\section{Regional Market Context and Hyper-Local Economics}
+
+The retail grocery ecosystem in India presents distinct economic dynamics that fundamentally differ from Western retail markets. In tier-2 and tier-3 cities, as well as institutional campus environments (such as universities and hostels in Imphal, Manipur), household grocery purchases do not conform to the continuous micro-ordering pattern promoted by quick-commerce startups. Instead, consumer purchasing behavior is characterized by distinct structural factors:
+
+\begin{enumerate}
+    \item \textbf{Significant Price Dispersion Across Neighborhood Markets:} Due to fragmented wholesale supply chains and variable transport overheads, identical staple commodities exhibit price variations of 12\% to 25\% between competing independent stores separated by less than two kilometers. For instance, specialized grain merchants at local wholesale mandis frequently provide substantial discounts on 20~kg or 25~kg sacks of rice and pulses, while neighborhood corner shops maintain higher markups to cover convenience overheads. A platform that enables digital comparison and competitive bidding allows households and institutional buyers to capture these savings directly.
+    \item \textbf{Economic Centrality of Independent Kirana Stores:} Independent neighborhood merchants (kirana stores) account for over 80\% of retail grocery distribution across India. These merchants possess deep localized knowledge of regional consumption patterns, maintain agile relationships with agricultural distributors, and frequently operate on tight operational margins. However, centralized quick-commerce platforms bypass these merchants entirely by setting up proprietary dark store networks, displacing local businesses. GroDealz is specifically designed as an open, multi-tenant marketplace where neighborhood stores can participate digitally without paying extortionate commission rates.
+    \item \textbf{High Price Sensitivity on Bulk Staples:} While individual consumers may tolerate higher prices for occasional emergency purchases (such as bread or batteries delivered in ten minutes), routine grocery shopping involving 15 to 30 items represents a significant portion of a middle-class household or student mess budget. In bulk purchasing scenarios, a net difference of ₹250 to ₹400 across a monthly basket justifies waiting several hours or choosing scheduled delivery over ultra-fast 10-minute dispatch.
+    \item \textbf{Bargaining and Custom Requirement Culture:} Unlike fixed-price retail, offline Indian retail incorporates negotiation and relationship-driven pricing for recurring or large-scale orders. Buyers expect merchants to quote competitive prices when purchasing in bulk. The reverse Request for Quotation (RFQ) mechanism implemented in GroDealz directly digitizes this traditional commercial behavior, providing a transparent, auditable channel for price discovery.
+\end{enumerate}
+
+\section{Project Development Methodology and Iterative Lifecycle}
+
+To ensure systematic development and rigorous validation, GroDealz was engineered following an Agile, sprint-driven methodology organized into five distinct two-week milestones:
+
+\begin{itemize}
+    \item \textbf{Milestone 1 --- Foundations and Multi-Store Catalog:} Designed the core 3-tier system architecture, MongoDB schemas (User, Store, Product, Order), Express REST endpoints, and the React~18 user interface. Implemented initial catalog browsing, category filtering, and authentication with JWT tokens and bcrypt password encryption.
+    \item \textbf{Milestone 2 --- Algorithmic Recommendation and Demand Forecasting:} Formulated and integrated the hybrid recommendation engine combining collaborative filtering, content feature vectors, and context-aware time-of-day scoring. Implemented the background automated demand forecasting cron job using time-series smoothing and linear trend regression.
+    \item \textbf{Milestone 3 --- Autonomous AI Shopping Agent (LangGraph):} Constructed the cyclic state-machine decision graph in Python using LangGraph and FastAPI. Implemented multi-store catalog parallel querying adapters, inventory freshness checks, and the combinatorial basket optimizer that balances product price differentials against store-specific delivery fees. Built the interactive Store Journey Audit UI.
+    \item \textbf{Milestone 4 --- Module B Reverse RFQ Marketplace and Quotation Engine:} Developed the reverse shopping requirement workflow. Built the NLP requirement parser for extracting commodities, quantities, budgets, and deadlines. Implemented the merchant itemized bidding dashboard, four dynamic multi-criteria quotation ranking modes, counter-offer state management, and atomic conversion to confirmed orders.
+    \item \textbf{Milestone 5 --- Real-Time Synchronization, Support CRM, and Verification:} Implemented WebSocket event multiplexing via Socket.IO for instantaneous order tracking and RFQ room alerts. Developed the customer support CRM with automated intent classification and sensitive PII masking. Executed automated end-to-end integration test suites across all core subsystems.
+\end{itemize}
+
 \section{Structure of the Report}
 
 The remainder of this report is organized as follows:

@@ -86,3 +86,99 @@ Allows customers to create tickets with an optional PII masking toggle. It featu
 
 \subsection{Homepage and Product Catalog (\texttt{Home.js} and \texttt{Products.js})}
 Presents the full grocery catalog with category pills, live search, freshness badges, and personalized recommendation rails.
+
+\section{Autonomous LangGraph Decision Graph Implementation}
+
+The autonomous shopping assistant is implemented in the Python microservice (\texttt{ai-agent/app/graph.py}) using LangGraph. Unlike rigid conversational scripts, the agent maintains an explicit, typed state graph throughout its multi-step execution.
+
+\subsection{State Schema Specification (\texttt{AgentState})}
+The workflow state is defined as a typed dictionary passing data between nodes:
+\begin{lstlisting}[language=Python, basicstyle=\footnotesize\ttfamily]
+class AgentState(TypedDict):
+    raw_query: str                          # User natural language input
+    requirements: Optional[Dict[str, Any]]  # Extracted parameters
+    raw_candidates: List[Dict[str, Any]]    # Items discovered across stores
+    normalized_candidates: List[Dict[str, Any]] # Standardized units & prices
+    optimized_strategies: Dict[str, Any]    # Single vs Multi store metrics
+    proposal: Dict[str, Any]                # Audited picking itinerary
+    status: str                             # Lifecycle stage indicator
+    errors: List[str]                       # Resilience error log
+\end{lstlisting}
+
+\subsection{Graph Node Pipeline and Execution Flow}
+The decision graph executes seven sequential operational nodes:
+\begin{enumerate}
+    \item \textbf{\texttt{extract\_requirements\_node}:} Invokes an LLM prompt with strict Pydantic output parsing (\texttt{ShoppingRequirements}) to extract household size, planning duration, target budget, and item lists.
+    \item \textbf{\texttt{validate\_requirements\_node}:} Performs sanity validation. If the customer submits an open-ended goal (e.g., \emph{``Groceries for 3 days''}) without specific items, it dynamically injects baseline staples (vegetables, rice, milk, dal, bread) scaled by family size.
+    \item \textbf{\texttt{multi\_store\_search\_node}:} Iterates through needed items and calls \texttt{store\_registry.parallel\_search()}, executing concurrent asynchronous HTTP requests across all registered store adapters (FreshMart Central, QuickBazaar, Paona Supermarket).
+    \item \textbf{\texttt{normalize\_items\_node}:} Unifies unit representations across stores (e.g., converting grams to kilograms, and matching brand variations).
+    \item \textbf{\texttt{optimize\_basket\_node}:} Computes total costs for each individual store ($C_{\text{single}}$) and calculates the optimal cross-store partition ($C_{\text{multi}}$) by greedily picking the lowest price per item while adding delivery fees ($F_s$) for each distinct store visited.
+    \item \textbf{\texttt{generate\_proposal\_node}:} Assembles the final structured response containing the Store Journey Audit, itemized picking breakdown per vendor, and proof of net savings ($\Delta_{\text{savings}}$).
+\end{enumerate}
+
+The graph edges are configured using LangGraph's \texttt{StateGraph}:
+\begin{lstlisting}[language=Python, basicstyle=\footnotesize\ttfamily]
+workflow = StateGraph(AgentState)
+workflow.add_node("extract", extract_requirements_node)
+workflow.add_node("validate", validate_requirements_node)
+workflow.add_node("search", multi_store_search_node)
+workflow.add_node("normalize", normalize_items_node)
+workflow.add_node("optimize", optimize_basket_node)
+workflow.add_node("propose", generate_proposal_node)
+
+workflow.set_entry_point("extract")
+workflow.add_edge("extract", "validate")
+workflow.add_edge("validate", "search")
+workflow.add_edge("search", "normalize")
+workflow.add_edge("normalize", "optimize")
+workflow.add_edge("optimize", "propose")
+workflow.add_edge("propose", END)
+compiled_agent = workflow.compile()
+\end{lstlisting}
+
+\section{Transaction Management and Atomic Quotation Acceptance}
+
+To prevent race conditions during reverse RFQ negotiations, \texttt{acceptQuotationAndCreateOrder} in \texttt{backend/services/quotationEngine.js} executes an atomic multi-document state transition:
+
+\begin{enumerate}
+    \item \textbf{Expiration and Status Verification:} Verifies that the quotation has not passed its expiration timestamp (\texttt{Date.now() <= quote.expiresAt}) and that the parent request remains in an actionable state (\texttt{open} or \texttt{quotes\_received}).
+    \item \textbf{Atomic Status Mutation:} Transitions the accepted quotation status to \texttt{accepted}. Concurrently, all other quotations linked to the same \texttt{requestId} are updated to \texttt{rejected}:
+\begin{lstlisting}[language=JavaScript, basicstyle=\footnotesize\ttfamily]
+await MerchantQuotation.updateMany(
+  { request: requestId, _id: { $ne: quotationId } },
+  { $set: { status: 'rejected' } }
+);
+\end{lstlisting}
+    \item \textbf{Order Document Generation:} Instantiates a confirmed \texttt{Order} document containing an immutable snapshot of all quoted line items, agreed unit prices, delivery fee, tax, merchant store ID, and buyer customer ID.
+    \item \textbf{Parent Request Linking:} Updates \texttt{BuyerRequest} status to \texttt{accepted} and records the generated \texttt{orderId} in \texttt{convertedOrderId}.
+    \item \textbf{Real-Time Event Dispatch:} Dispatches WebSocket notifications to both the customer room and the winning merchant, alerting them that the transaction has been finalized.
+\end{enumerate}
+
+\section{Real-Time WebSocket Event Multiplexing}
+
+The real-time layer is managed in \texttt{backend/server.js} using Socket.IO. To prevent event cross-talk between unrelated users, connections are partitioned into isolated rooms:
+
+\begin{itemize}
+    \item \textbf{Merchant RFQ Room (\texttt{merchants\_rfq}):} All authenticated merchants join this broadcast channel upon login. When any buyer posts a new requirement, the server emits \texttt{new\_rfq\_available} with summary details (delivery locality, item count, target deadline).
+    \item \textbf{Request-Specific Negotiation Room (\texttt{rfq\_<id>}):} The buyer and participating merchants join a scoped room for that specific RFQ. When a merchant submits or revises an itemized quotation, or when the buyer submits a counter-offer, the server emits \texttt{quote\_update} exclusively to room participants.
+    \item \textbf{Live Order Tracking Room (\texttt{order\_<id>}):} When an order is placed, both the customer and fulfilling merchant join the order room. Status updates (\texttt{placed} $\to$ \texttt{confirmed} $\to$ \texttt{out\_for\_delivery} $\to$ \texttt{delivered}) are broadcast instantaneously, triggering live UI badge updates without browser refreshes.
+\end{itemize}
+
+\section{Security Architecture and Sensitive Data Protection}
+
+Security and privacy controls are enforced across all layers of the GroDealz application:
+
+\begin{enumerate}
+    \item \textbf{Cryptographic Authentication Middleware (\texttt{auth.js}):} Every protected route intercepts the HTTP \texttt{Authorization} header, extracts the Bearer JWT token, verifies its cryptographic signature using HMAC-SHA256, and attaches the decoded user payload to Express \texttt{req.user}. Requests with expired or tampered tokens are rejected with HTTP 401 Unauthorized.
+    \item \textbf{Credential Protection:} User passwords are encrypted prior to database insertion using \texttt{bcryptjs} with 10 salt rounds. Plaintext passwords are never logged or stored.
+    \item \textbf{Automated PII Sanitization Pipeline:} In the Customer Support CRM (\texttt{backend/routes/support.js}), when a buyer submits a support ticket, the optional PII masking toggle triggers regex scrubbing that sanitizes phone numbers and email addresses before persistence:
+\begin{lstlisting}[language=JavaScript, basicstyle=\footnotesize\ttfamily]
+function maskPII(text) {
+  if (!text) return '';
+  return text
+    .replace(/(?:\+91[\-\s]?)?[6-9]\d{9}/g, '[PHONE_REDACTED]')
+    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL_REDACTED]');
+}
+\end{lstlisting}
+    This protects customer privacy while allowing the NLP intent classifier to accurately categorize the dispute (e.g., delivery delay, missing item, payment inquiry).
+\end{enumerate}

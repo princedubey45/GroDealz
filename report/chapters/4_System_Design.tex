@@ -241,18 +241,12 @@ The Autonomous AI Grocery Shopping Agent (accessible on \texttt{/ai-planner}) op
     \item \textbf{Parameter Extraction Node:} Employs structured natural language parsing to extract the target count of individuals ($N=5$), planning duration ($D=3\text{ days}$), maximum target budget ($B=₹600$), dietary constraints, and item categories.
     \item \textbf{Cross-Store Discovery Node:} Queries participating local merchant databases (e.g., FreshMart Central, QuickBazaar, Paona Supermarket) to assemble candidate products matching each needed category.
     \item \textbf{Fresh Stock Verification Node:} Verifies current shelf quantities and freshness indicators, filtering out items that are out of stock.
-    \item \textbf{Basket Optimization Node:} Solves the single-store versus multi-store tradeoff. Buying all items from one convenient store incurs a single delivery fee ($F_{\text{single}}$), but some items may be priced higher:
-    \begin{equation}
-        C_{\text{single}} = \sum_{i \in I} P_{\text{single}, i} + F_{\text{single}}
-    \end{equation}
-    Splitting items across multiple stores allows selecting the minimum product price $P_{s, i}$ from store $s$, but incurs separate delivery charges $F_s$ for each distinct store visited:
-    \begin{equation}
-        C_{\text{multi}} = \sum_{s \in S_{\text{visited}}} \left( \sum_{i \in I_s} P_{s, i} + F_s \right)
-    \end{equation}
-    The optimizer computes the net financial savings:
-    \begin{equation}
-        \Delta_{\text{savings}} = C_{\text{single}} - C_{\text{multi}}
-    \end{equation}
+    \item \textbf{Basket Optimization Node:} Solves the single-store versus multi-store tradeoff. Buying all items from one convenient store incurs a single delivery fee ($F_{\text{single}}$), whereas splitting items across multiple stores allows selecting the minimum product price $P_{s, i}$ from store $s$ at the cost of separate store delivery charges $F_s$:
+    \begin{align}
+        &C_{\text{single}} = \sum_{i \in I} P_{\text{single}, i} + F_{\text{single}} \\
+        &C_{\text{multi}} = \sum_{s \in S_{\text{visited}}} \left( \sum_{i \in I_s} P_{s, i} + F_s \right) \\
+        &\Delta_{\text{savings}} = C_{\text{single}} - C_{\text{multi}}
+    \end{align}
     If $\Delta_{\text{savings}} > 0$, the multi-store split is recommended to the customer as the best-value deal.
     \item \textbf{Store Journey Audit Node:} Generates an audit trail detailing the exact items to pick at each shop and visualizes the itinerary in the user interface.
 \end{enumerate}
@@ -264,9 +258,9 @@ The Merchant Quotation Engine governs the pricing, ranking, and negotiation life
 \subsection{Itemized Pricing Calculations}
 Merchants cannot simply quote an arbitrary lump sum; they must submit unit prices for every individual line item requested. This ensures transparency for the customer:
 \begin{align}
-    \text{lineTotal}_i &= \text{quantity}_i \times \text{unitPrice}_i \\
-    \text{itemsSubtotal} &= \sum_{i=1}^n \text{lineTotal}_i \\
-    \text{grandTotal} &= \text{itemsSubtotal} + \text{deliveryCharge} + \text{tax}
+    &\text{lineTotal}_i = \text{quantity}_i \times \text{unitPrice}_i \\
+    &\text{itemsSubtotal} = \sum_{i=1}^n \text{lineTotal}_i \\
+    &\text{grandTotal} = \text{itemsSubtotal} + \text{deliveryCharge} + \text{tax}
 \end{align}
 
 \subsection{Multi-Criteria Dynamic Ranking Formulations}

@@ -46,20 +46,45 @@ Armstrong~\cite{armstrong2001combining} established that combining separate fore
 
 \section{Autonomous Agents and Multi-Step Task Execution}
 
-Recent advances in Large Language Models (LLMs) and agentic frameworks, such as LangChain and LangGraph, have enabled AI systems to move beyond simple question answering toward autonomous multi-step reasoning. Instead of treating customer queries as isolated text, an agent can:
+Recent breakthroughs in Large Language Models (LLMs) and agentic frameworks have fundamentally altered automated decision systems in e-commerce. Early conversational systems relied either on scripted decision trees (Weizenbaum~\cite{weizenbaum1966eliza}) or intent-classification chatbots with rigid slot-filling (F{\o}lstad and Brandtz{\ae}g~\cite{folstad2017chatbots}). While effective for narrow FAQs, such systems cannot perform multi-step planning, stateful backtracking, or dynamic tool execution.
+
+The introduction of the ReAct paradigm by Yao et al.~\cite{yao2022react} demonstrated that prompting language models to alternate between explicit reasoning traces (``Thought'') and executable environment actions (``Act'') significantly improves performance on complex multi-hop queries. In hyper-local grocery shopping, an agent cannot simply answer a question; it must execute an autonomous operational loop:
 \begin{enumerate}
-    \item Parse an informal request into structured operational parameters (e.g., family size, duration, dietary preference, target budget).
-    \item Query multiple external APIs or database tools to inspect stock levels and unit prices across different vendor locations.
-    \item Optimize combinations of items using multi-criteria cost functions.
-    \item Maintain execution state across decision nodes and output verifiable, structured plans.
+    \item \textbf{Structured Parameter Extraction:} Parse informal colloquial natural language or Hinglish into validated domain entities (family size $N$, duration $D$, target budget $B$, dietary tags).
+    \item \textbf{Parallel Environment Discovery:} Asynchronously query multiple distributed merchant databases to retrieve live product candidates, prices, and stock indicators.
+    \item \textbf{Data Normalization and Constraint Verification:} Standardize disparate unit measurements (e.g., converting 500~g packets and 1~kg sacks into unified unit-cost metrics) and enforce hard budget constraints.
+    \item \textbf{Combinatorial Basket Optimization:} Formulate and solve the single-store versus multi-store optimization tradeoff, balancing per-item price savings against individual store delivery charges.
+    \item \textbf{Auditable Itinerary Generation:} Compile an inspectable, human-verifiable store picking audit that allows the buyer to review individual store contributions before order placement.
 \end{enumerate}
-In this project, an autonomous agent pipeline evaluates cross-store inventory, solves the multi-store versus single-store basket tradeoff, and produces an audited picking itinerary.
 
-\section{Reverse Auctions and Request for Quotation (RFQ) Systems}
+Traditional agent frameworks like LangChain standard chains execute purely linear directed acyclic graphs (DAGs), which fail when an agent encounters unexpected real-world edge cases (such as a chosen item being out of stock across all preferred stores). To support iterative refinement and conditional recovery, GroDealz employs \textbf{LangGraph}, a cyclic state-machine framework where agent execution is modeled as a state graph with typed state channels, conditional branching, and deterministic fallback nodes. By constraining language model outputs to strictly typed Pydantic data schemas, the system eliminates mathematical hallucination, ensuring that all item quantities and financial figures reflect verified database records.
 
-In traditional forward e-commerce, the seller sets a price and the buyer decides whether to buy. In a reverse auction or Request for Quotation (RFQ) system, the relationship is inverted: the customer defines what they want, and multiple competing suppliers submit bids to win the customer's business.
+\section{Reverse Auctions and Multi-Attribute Request for Quotation (RFQ) Systems}
 
-Reverse auctions are widely used in enterprise procurement, government tenders, and business-to-business (B2B) supply chains. However, consumer-facing quick-commerce platforms have rarely adopted reverse bidding. When customers need bulk staples (such as 25~kg of basmati rice for a student hostel or event catering), standard retail interfaces become inefficient. Allowing nearby independent merchants to submit transparent, itemized line-item quotations introduces healthy local price competition and transparency.
+In standard forward e-commerce marketplaces (such as Amazon or Blinkit), price discovery is strictly one-directional: the vendor sets a take-it-or-leave-it price, and the customer has no channel to express willingness-to-pay or request customized volume discounts. In contrast, reverse auction mechanisms invert this market dynamic: the buyer announces a specific requirement, and multiple pre-qualified suppliers submit competitive bids to fulfill the order.
+
+Extensive literature on auction theory (De Vries and Vohra~\cite{de2003combinatorial}) distinguishes between several reverse bidding formats:
+\begin{itemize}
+    \item \textbf{First-Price Sealed-Bid Reverse Auctions:} Suppliers submit independent, private bids without visibility into competing offers. The buyer awards the contract to the lowest bidder. While computationally simple, sealed-bid formats often induce the ``winner's curse'' and prevent suppliers from dynamically adjusting prices based on real-time capacity.
+    \item \textbf{Iterative English Reverse Auctions:} Suppliers openly observe competing bids and progressively lower their prices in descending rounds. While driving prices down to marginal costs, open descending auctions can trigger predatory bidding wars and discourage small merchant participation.
+    \item \textbf{Multi-Attribute Interactive Quotation Negotiation:} In consumer and institutional procurement, price is rarely the sole evaluation criterion. Delivery reliability, fulfillment lead time, merchant reputation, and itemized product brand quality are equally vital. Multi-Attribute Utility Theory (MAUT) provides a mathematical basis for evaluating multi-dimensional bids by constructing a composite scoring function:
+    \begin{equation}
+        U(\vec{x}) = \sum_{k=1}^{K} w_k \cdot v_k(x_k)
+    \end{equation}
+    where $w_k$ denotes the normalized importance weight of attribute $k$, and $v_k(x_k)$ is the attribute-specific value function.
+\end{itemize}
+
+GroDealz implements an itemized multi-attribute quotation engine (Module B). Rather than bidding arbitrary lump sums, merchants submit granular line-item prices alongside explicit delivery timestamps and stock commitments. Furthermore, the platform empowers the customer to choose their immediate evaluation priority dynamically---prioritizing lowest cost, fastest delivery speed, highest vendor reputation, or a balanced 100-point composite score. This guarantees transparent price formation while preventing merchants from concealing inflated delivery or packaging fees inside opaque bundles.
+
+\section{Data Security, Privacy, and Transactional Concurrency in Multi-Sided Platforms}
+
+Multi-sided digital marketplaces handle concurrent interactions between competing merchants and buyers, introducing critical data protection and concurrency challenges:
+
+\begin{enumerate}
+    \item \textbf{Personally Identifiable Information (PII) Protection in Customer Support:} When buyers submit support tickets or interact with automated AI CRM systems regarding delivery disputes, they frequently share sensitive details such as contact telephone numbers, home delivery landmarks, and transaction identifiers. To comply with modern data privacy principles, sensitive fields must be sanitized before being transmitted to external language model APIs or centralized analytics logs. Implementing rule-based regex masking on the client and server boundary ensures that phone numbers and email addresses are replaced with anonymized tokens (e.g., \texttt{[PHONE\_REDACTED]}) while preserving the semantic context required for intent classification.
+    \item \textbf{Concurrency and Atomic State Transitions in Reverse RFQs:} In an active reverse marketplace, multiple events occur asynchronously: merchants submit bids, buyers issue counter-offers, and quotations approach expiration timestamps. A critical concurrency hazard arises when a customer accepts a quotation: the selected quote must transition to \texttt{accepted}, all other active quotations for that request must be atomically updated to \texttt{rejected}, a confirmed \texttt{Order} document must be instantiated, and the parent \texttt{BuyerRequest} status must become \texttt{converted}. If these operations are executed non-atomically, race conditions could allow a merchant to revise a quote simultaneously or enable double-acceptance. Enforcing atomic database document updates and transactional validation prevents state inconsistency.
+    \item \textbf{Role-Based Cryptographic Access Control:} Because merchants and customers share the same underlying API endpoints, the application server must cryptographically verify user identity and authority on every request. JSON Web Tokens (JWT) signed with high-entropy HMAC-SHA256 secrets provide stateless, tamper-proof session tokens containing encrypted user identifiers and operational roles, preventing unauthorized access across disparate merchant dashboards.
+\end{enumerate}
 
 \section{Comparative Summary}
 
