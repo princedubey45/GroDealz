@@ -24,10 +24,10 @@ Collaborative filtering (CF), introduced formally by Resnick et al.~\cite{resnic
 \begin{equation}
     \text{sim}(i, j) = \frac{\sum_{u \in U} R_{u,i} \cdot R_{u,j}}{\sqrt{\sum_{u \in U} R_{u,i}^2} \cdot \sqrt{\sum_{u \in U} R_{u,j}^2}}
 \end{equation}
-While collaborative filtering works well when substantial interaction data is available, it suffers from the well-documented \emph{cold-start problem}: when a new product is added or a new customer signs up, there are no prior interactions, causing collaborative filtering alone to fail.
+While collaborative filtering works well when substantial interaction data is available, it suffers from the well-documented \textbf{cold-start problem}: when a new product is added or a new customer signs up, there are no prior interactions, causing collaborative filtering alone to fail.
 
 \subsection{Content-Based Filtering}
-Content-based filtering, discussed by Pazzani and Billsus~\cite{pazzani2007content}, avoids the cold-start problem by analyzing product features directly (such as category, brand, dietary attributes, and price tier). A user profile vector is constructed from the attributes of items the user has previously interacted with, and candidate products are scored by vector similarity. However, content-based methods tend to suffer from \emph{overspecialization}, repeatedly recommending items very similar to what the user already purchased.
+Content-based filtering, discussed by Pazzani and Billsus~\cite{pazzani2007content}, avoids the cold-start problem by analyzing product features directly (such as category, brand, dietary attributes, and price tier). A user profile vector is constructed from the attributes of items the user has previously interacted with, and candidate products are scored by vector similarity. However, content-based methods tend to suffer from \textbf{overspecialization}, repeatedly recommending items very similar to what the user already purchased.
 
 \subsection{Hybrid Approaches}
 Burke~\cite{burke2002hybrid} showed that combining collaborative and content-based approaches in an ensemble overcomes the individual weaknesses of both methods. In GroDealz, we implement a weighted hybrid ensemble that also incorporates contextual signals, such as the time of day (e.g., boosting milk and bakery products in the morning, and dinner vegetables and rice in the evening).

@@ -34,7 +34,7 @@ The functional requirements are organized systematically by subsystem:
 
 \subsection{Autonomous AI Shopping Agent and Multi-Store Optimizer (FR-AGENT)}
 \begin{itemize}
-    \item \textbf{FR-AGENT-1:} The system shall accept grocery shopping requests in natural language or Hinglish (e.g., \emph{``Buy groceries for a family of four for three days under ₹1,500''}).
+    \item \textbf{FR-AGENT-1:} The system shall accept grocery shopping requests in natural language or Hinglish (e.g., \textbf{``Buy groceries for a family of four for three days under ₹1,500''}).
     \item \textbf{FR-AGENT-2:} The agent pipeline shall extract structured parameters including household members, duration, target budget, delivery urgency, and dietary goals.
     \item \textbf{FR-AGENT-3:} The agent shall query multiple nearby participating stores, verify live stock availability, and evaluate whether a single-store order or a multi-store split provides the lowest overall cost after including individual delivery fees.
     \item \textbf{FR-AGENT-4:} The system shall display an interactive Store Journey Audit showing the customer the exact store-hopping route and proving the net financial savings.
@@ -46,7 +46,7 @@ The functional requirements are organized systematically by subsystem:
     \item \textbf{FR-RFQ-2:} The system shall parse prompts to extract individual items, quantities, units (kg, g, L, packs), target budget, and delivery deadlines.
     \item \textbf{FR-RFQ-3:} Customers shall have the option to share their target budget with merchants or keep it private.
     \item \textbf{FR-RFQ-4:} Nearby merchants shall be able to view open buyer requests in their area and submit itemized line-item quotations specifying unit prices, brand offered, stock confirmation, delivery fees, taxes, and expiration times.
-    \item \textbf{FR-RFQ-5:} The quotation engine shall rank competing quotations dynamically according to the customer's choice: \emph{Lowest Total Price}, \emph{Fastest Delivery}, \emph{Top Rated Merchant}, or \emph{Balanced Composite Value}.
+    \item \textbf{FR-RFQ-5:} The quotation engine shall rank competing quotations dynamically according to the customer's choice: \textbf{Lowest Total Price}, \textbf{Fastest Delivery}, \textbf{Top Rated Merchant}, or \textbf{Balanced Composite Value}.
     \item \textbf{FR-RFQ-6:} Customers shall be able to propose counter-offers with notes, and merchants shall be able to revise their quotations accordingly.
     \item \textbf{FR-RFQ-7:} Accepting a quotation shall atomically mark competing bids as rejected and convert the accepted quotation directly into a confirmed order.
 \end{itemize}
@@ -54,7 +54,7 @@ The functional requirements are organized systematically by subsystem:
 \subsection{Order Lifecycle and Real-Time Tracking (FR-ORDER)}
 \begin{itemize}
     \item \textbf{FR-ORDER-1:} Customers shall be able to add items to a persistent shopping cart and proceed through checkout with address confirmation and payment selection.
-    \item \textbf{FR-ORDER-2:} The system shall update order status across six defined states: \emph{placed, confirmed, preparing, out\_for\_delivery, delivered, cancelled}.
+    \item \textbf{FR-ORDER-2:} The system shall update order status across six defined states: \textbf{placed, confirmed, preparing, out\_for\_delivery, delivered, cancelled}.
     \item \textbf{FR-ORDER-3:} Real-time order progress updates shall be transmitted to the customer and store owner via Socket.IO without requiring page reloads.
 \end{itemize}
 
@@ -87,7 +87,7 @@ The functional requirements are organized systematically by subsystem:
 \textbf{Preconditions:} Customer is logged in and navigates to the AI Copilot page.\\
 \textbf{Flow of Events:}
 \begin{enumerate}
-    \item Customer types: \emph{``Party snacks and beverages for 5 people under ₹600''}.
+    \item Customer types: \textbf{``Party snacks and beverages for 5 people under ₹600''}.
     \item The system extracts parameters: 5 members, 3 days duration, ₹600 target budget, snacks and beverages categories.
     \item The agent inspects inventory across FreshMart Central and QuickBazaar.
     \item The optimizer detects that snacks are cheaper at QuickBazaar while beverages are cheaper at FreshMart.
@@ -100,7 +100,7 @@ The functional requirements are organized systematically by subsystem:
 \textbf{Preconditions:} Customer needs bulk goods not listed as standard SKUs.\\
 \textbf{Flow of Events:}
 \begin{enumerate}
-    \item Customer enters: \emph{``I need 25 kg basmati rice for a hostel. My budget is ₹2,500. Delivery within two days.''} on the Custom RFQ page.
+    \item Customer enters: \textbf{``I need 25 kg basmati rice for a hostel. My budget is ₹2,500. Delivery within two days.''} on the Custom RFQ page.
     \item The system parses the text, sets budget to ₹2,500, delivery deadline to 2 days, and creates an open RFQ.
     \item A real-time notification alerts nearby merchants on their Open Requests dashboard.
     \item Shop A quotes ₹94/kg (₹2,350) + ₹50 delivery = ₹2,400.

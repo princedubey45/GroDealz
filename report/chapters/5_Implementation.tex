@@ -18,12 +18,12 @@ The implementation utilizes an integrated, multi-service architecture:
 \section{Core Backend Services}
 
 \subsection{Natural Language Requirement Parser}
-The requirement parser takes arbitrary customer sentences (such as \emph{``I need 25 kg basmati rice for a hostel. My budget is ₹2,500. Delivery within two days.''}) and extracts structured parameters using regular expressions and semantic fallback dictionaries:
+The requirement parser takes arbitrary customer sentences (such as \textbf{``I need 25 kg basmati rice for a hostel. My budget is ₹2,500. Delivery within two days.''}) and extracts structured parameters using regular expressions and semantic fallback dictionaries:
 
 \begin{itemize}
-    \item \textbf{Budget Extraction:} Strips currency symbols (₹, Rs, INR) and comma digit separators, matching numerical patterns adjacent to budget keywords (e.g., \emph{``budget is ₹2,500''}, \emph{``under ₹600''}).
-    \item \textbf{Delivery Deadline Extraction:} Scans for day counts (e.g., \emph{``within 2 days''}, \emph{``in 3 days''}) or relative terms (such as \emph{``tomorrow''} or \emph{``urgent''}) and computes the future \texttt{Date} timestamp.
-    \item \textbf{Commodity and Quantity Extraction:} Matches patterns pairing numbers with measurement units (kg, g, L, packs, pcs) and product names (such as \emph{``25 kg basmati rice''} or \emph{``2 litre mustard oil''}).
+    \item \textbf{Budget Extraction:} Strips currency symbols (₹, Rs, INR) and comma digit separators, matching numerical patterns adjacent to budget keywords (e.g., \textbf{``budget is ₹2,500''}, \textbf{``under ₹600''}).
+    \item \textbf{Delivery Deadline Extraction:} Scans for day counts (e.g., \textbf{``within 2 days''}, \textbf{``in 3 days''}) or relative terms (such as \textbf{``tomorrow''} or \textbf{``urgent''}) and computes the future \texttt{Date} timestamp.
+    \item \textbf{Commodity and Quantity Extraction:} Matches patterns pairing numbers with measurement units (kg, g, L, packs, pcs) and product names (such as \textbf{``25 kg basmati rice''} or \textbf{``2 litre mustard oil''}).
 \end{itemize}
 
 Algorithm~\ref{alg:rfq_parser} specifies the complete multi-pattern entity extraction and normalization pipeline:
@@ -97,7 +97,7 @@ The user interface is organized into modular pages located in \texttt{frontend/s
 
 \subsection{Customer Shopping Requirements Page}
 \begin{itemize}
-    \item \textbf{Prompt Input with AI Extractor:} Features an interactive input box with a 1-click example loader (\emph{``I need 25 kg basmati rice for a hostel...''}). Clicking \emph{``Extract with AI Parser''} calls the backend API and auto-fills the line-item table.
+    \item \textbf{Prompt Input with AI Extractor:} Features an interactive input box with a 1-click example loader (\textbf{``I need 25 kg basmati rice for a hostel...''}). Clicking \textbf{``Extract with AI Parser''} calls the backend API and auto-fills the line-item table.
     \item \textbf{Structured Line-Item Editor:} Allows users to add, edit, or delete items, specify units, and record preferred brands.
     \item \textbf{Offer Comparison Matrix:} Displays competing merchant cards side-by-side. Users can switch ranking priorities dynamically with one click, expand line-item breakdowns to view unit prices, propose counter-offers, or accept the winning quote to generate an immediate order.
 \end{itemize}

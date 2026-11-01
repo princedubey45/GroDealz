@@ -24,7 +24,7 @@ Key functional elements visible on the screen include:
     \item \textbf{Status and Platform Metrics:} Shows the live platform connection in Imphal, key performance highlights (12+ Nearby Stores, 30-minute delivery promise, 500+ fresh products, AI Powered), and active cart count.
     \item \textbf{AI Recommendation Banner:} The notification banner informs the user that the system combines collaborative filtering with content-based features, displaying the active tags: \texttt{COLLAB. FILTER}, \texttt{CONTENT FILTER}, and \texttt{TIME-AWARE}.
     \item \textbf{Category Navigation:} Quick-filter buttons allow switching between Vegetables, Fruits, Dairy, Staples, Snacks, Bakery, Beverages, and Meat \& Eggs.
-    \item \textbf{Product Cards with Freshness Badges:} Each item displays its current price, discounted rate, user affinity indicator (e.g., \emph{``Users like you''} or \emph{``Based on taste''}), and a live confidence badge (\emph{``Very Fresh''}).
+    \item \textbf{Product Cards with Freshness Badges:} Each item displays its current price, discounted rate, user affinity indicator (e.g., \textbf{``Users like you''} or \textbf{``Based on taste''}), and a live confidence badge (\textbf{``Very Fresh''}).
     \item \textbf{Sidebar Navigation:} Provides direct links to Home, Shop, AI Copilot, Stores, Cart, Custom RFQ, Orders, and Support, along with AI engine status pills.
 \end{itemize}
 
@@ -41,11 +41,11 @@ Figure~\ref{fig:screen_ai_planner} illustrates the Autonomous Grocery Shopping A
 
 The screenshot captures the complete execution flow of the autonomous agent:
 \begin{itemize}
-    \item \textbf{Natural Language Input:} The user entered: \emph{``Party snacks and beverages for 5 people under ₹600''}.
+    \item \textbf{Natural Language Input:} The user entered: \textbf{``Party snacks and beverages for 5 people under ₹600''}.
     \item \textbf{Extracted Parameter Chips:} The agent parsed the input into structured chips: \textbf{Family:} 5 Members, \textbf{Duration:} 3 Days, \textbf{Target Budget:} ₹600, \textbf{Delivery:} Standard, \textbf{Diet:} ALL, and \textbf{Goal:} cheapest reasonable.
-    \item \textbf{Store Journey Audit:} The panel displays the \emph{``Autonomous Shopping Journey \& Picking Audit''} with interactive controls to replay the journey or expand the tour.
+    \item \textbf{Store Journey Audit:} The panel displays the \textbf{``Autonomous Shopping Journey \& Picking Audit''} with interactive controls to replay the journey or expand the tour.
     \item \textbf{Smart Basket Comparison:} The system evaluates the multi-store split against single-store convenience (FreshMart Central).
-    \item \textbf{Verified Net Savings Proof:} The green banner clearly proves the financial benefit to the customer: \emph{``Multi-store basket saves ₹267 compared to shopping only at FreshMart Central, even after factoring individual delivery fees!''}
+    \item \textbf{Verified Net Savings Proof:} The green banner clearly proves the financial benefit to the customer: \textbf{``Multi-store basket saves ₹267 compared to shopping only at FreshMart Central, even after factoring individual delivery fees!''}
 \end{itemize}
 
 \subsection{Custom Shopping Requirements and Reverse RFQ Marketplace}
@@ -61,11 +61,11 @@ Figure~\ref{fig:screen_buyer_rfq} shows the Customer RFQ screen (\texttt{/buyer-
 
 The screenshot illustrates:
 \begin{itemize}
-    \item \textbf{Requirement Input Box:} Displays the pre-filled hostel requirement: \emph{``I need 25 kg basmati rice for a hostel. My budget is ₹2,500. Delivery within two days.''}
-    \item \textbf{AI Parser Extraction:} Clicking \emph{``Extract with AI Parser''} automatically extracted the commodity: \textbf{Basmati Rice}, Quantity: \textbf{25}, Unit: \textbf{kg}, and Preferred Brand: \textbf{India Gate / Fortune}.
-    \item \textbf{Marketplace Parameters:} Shows the target budget set to ₹2,500 with the \emph{``Share budget with merchants''} checkbox enabled, the delivery deadline set to \emph{Standard --- Within 2 Days (Expected: Mon, 2 Nov)}, and the delivery location set to \emph{Hostel Block B, DM College Road, Imphal West}.
+    \item \textbf{Requirement Input Box:} Displays the pre-filled hostel requirement: \textbf{``I need 25 kg basmati rice for a hostel. My budget is ₹2,500. Delivery within two days.''}
+    \item \textbf{AI Parser Extraction:} Clicking \textbf{``Extract with AI Parser''} automatically extracted the commodity: \textbf{Basmati Rice}, Quantity: \textbf{25}, Unit: \textbf{kg}, and Preferred Brand: \textbf{India Gate / Fortune}.
+    \item \textbf{Marketplace Parameters:} Shows the target budget set to ₹2,500 with the \textbf{``Share budget with merchants''} checkbox enabled, the delivery deadline set to \textbf{Standard --- Within 2 Days (Expected: Mon, 2 Nov)}, and the delivery location set to \textbf{Hostel Block B, DM College Road, Imphal West}.
     \item \textbf{Offer Ranking Priority Selector:} Dropdown allows the customer to choose how competing quotations will be ranked: \textbf{Lowest Price (Minimum Total)}, \textbf{Fastest Delivery}, \textbf{Top Rated Merchants}, or \textbf{Balanced Composite}.
-    \item \textbf{Broadcast Button:} The primary call-to-action (\emph{``Broadcast Request to Nearby Merchants''}) transmits the RFQ to nearby store dashboards in real time.
+    \item \textbf{Broadcast Button:} The primary call-to-action (\textbf{``Broadcast Request to Nearby Merchants''}) transmits the RFQ to nearby store dashboards in real time.
 \end{itemize}
 
 \subsection{AI Customer Support CRM and Ticket Triage}
@@ -81,10 +81,10 @@ Figure~\ref{fig:screen_support} shows the AI Customer Support interface (\texttt
 
 The screenshot highlights:
 \begin{itemize}
-    \item \textbf{Role Toggle:} Simple switching between \emph{Customer View} and \emph{Agent Dashboard}.
-    \item \textbf{PII Protection Toggle:} A prominent checkbox (\emph{``Mask Sensitive Info (e.g. Card details)''}) that redacts credit card numbers and phone numbers before storing tickets.
+    \item \textbf{Role Toggle:} Simple switching between \textbf{Customer View} and \textbf{Agent Dashboard}.
+    \item \textbf{PII Protection Toggle:} A prominent checkbox (\textbf{``Mask Sensitive Info (e.g. Card details)''}) that redacts credit card numbers and phone numbers before storing tickets.
     \item \textbf{Automated Ticket Classification:} Shows live tickets automatically classified into categories, such as \texttt{Order Issue [CANCELLATION]}.
-    \item \textbf{AI Confidence Scores:} Each ticket displays an evaluated confidence metric, such as \emph{``AI Confidence: 90\%''} (CRM-2192) and \emph{``AI Confidence: 100\%''} (CRM-505).
+    \item \textbf{AI Confidence Scores:} Each ticket displays an evaluated confidence metric, such as \textbf{``AI Confidence: 90\%''} (CRM-2192) and \textbf{``AI Confidence: 100\%''} (CRM-505).
     \item \textbf{Ticket Status Lifecycle:} Shows color-coded status badges for \textbf{Resolved}, \textbf{Escalated}, and \textbf{Open} tickets.
 \end{itemize}
 
@@ -100,7 +100,7 @@ The core mathematical, parsing, and ranking algorithms of the Merchant Quotation
 \toprule
 \textbf{Test ID} & \textbf{Test Description} & \textbf{Expected Output} & \textbf{Status} \\
 \midrule
-T1 & Natural Language Requirement Parser (\emph{``25 kg basmati rice... budget ₹2,500''}) & Budget: 2500, Qty: 25 kg & PASS (100\%) \\
+T1 & Natural Language Requirement Parser (\textbf{``25 kg basmati rice... budget ₹2,500''}) & Budget: 2500, Qty: 25 kg & PASS (100\%) \\
 \addlinespace
 T2 & Line-Item Calculations: Shop A (₹94/kg + ₹50 delivery) & Subtotal: ₹2350, Total: ₹2400 & PASS (100\%) \\
 \addlinespace
