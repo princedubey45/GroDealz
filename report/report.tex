@@ -103,9 +103,9 @@
     \centering
     \vspace*{1.2\baselineskip}
 
-    {\linespread{1.35}\LARGE \textbf{GRODEALZ: AN AI-POWERED MULTI-STORE\\[0.35em]
-    GROCERY BASKET OPTIMIZER AND MERCHANT\\[0.35em]
-    QUOTATION PLATFORM}\par}
+    {\linespread{1.3}\Large \textbf{GroDealz: An AI-Powered Multi-Store\\[0.35em]
+    Grocery Basket Optimizer and Merchant\\[0.35em]
+    Quotation Platform}\par}
 
     \vspace{2\baselineskip}
 
@@ -149,7 +149,7 @@
 \end{center}
 \vspace{1cm}
 
-I hereby declare that the work presented in this project report entitled \textbf{``GRODEALZ: AN AI-POWERED MULTI-STORE GROCERY BASKET OPTIMIZER AND MERCHANT QUOTATION PLATFORM''} is my own bonafide work carried out under the supervision of \textbf{Dr. Kishorjit Nongmeikapam}, Associate Professor, Department of Computer Science and Engineering, Indian Institute of Information Technology Senapati, Manipur.
+I hereby declare that the work presented in this project report entitled \textbf{``GroDealz: An AI-Powered Multi-Store Grocery Basket Optimizer and Merchant Quotation Platform''} is my own bonafide work carried out under the supervision of \textbf{Dr. Kishorjit Nongmeikapam}, Associate Professor, Department of Computer Science and Engineering, Indian Institute of Information Technology Senapati, Manipur.
 
 I have strictly adhered to the principles of academic honesty and integrity. I have properly referenced and cited all ideas, methodologies, and source materials borrowed from external publications, open-source libraries, or online documents. No part of this report has been plagiarised or submitted anywhere else for the award of any other degree or diploma.
 
@@ -158,8 +158,7 @@ I have strictly adhered to the principles of academic honesty and integrity. I h
 {\scshape\large \textbf{Prince Kumar Dubey}}\\[0.35em]
 Roll No: 230101081\\[0.25em]
 Department of Computer Science and Engineering\\[0.25em]
-Indian Institute of Information Technology Senapati, Manipur\\[0.25em]
-Date: November, 2026
+Indian Institute of Information Technology Senapati, Manipur
 \end{flushright}
 
 \newpage
@@ -188,7 +187,7 @@ Date: November, 2026
     \begin{minipage}{\textwidth}
     \linespread{1.25}\selectfont
     This is to certify that the project report entitled
-    \textbf{``GRODEALZ: AN AI-POWERED MULTI-STORE GROCERY BASKET OPTIMIZER AND MERCHANT QUOTATION PLATFORM''}
+    \textbf{``GroDealz: An AI-Powered Multi-Store Grocery Basket Optimizer and Merchant Quotation Platform''}
     submitted to the Department of Computer Science and Engineering, Indian Institute of
     Information Technology Senapati, Manipur in partial fulfilment for the award of the
     degree of \textbf{Bachelor of Technology in Computer Science and Engineering} is an
@@ -203,23 +202,15 @@ Date: November, 2026
 \end{center}
 
 \vspace{0.2cm}
-Signature of Examiner 1: ............................................ \hfill Date: ...................\\[0.35cm]
-Signature of Examiner 2: ............................................ \hfill Date: ...................\\[0.35cm]
-Signature of Examiner 3: ............................................ \hfill Date: ...................\\[0.35cm]
-Signature of Examiner 4: ............................................ \hfill Date: ...................
+Signature of Examiner 1: \dotfill\\[0.45cm]
+Signature of Examiner 2: \dotfill\\[0.45cm]
+Signature of Examiner 3: \dotfill\\[0.45cm]
+Signature of Examiner 4: \dotfill
 \newpage
 
 % ── ABSTRACT ──────────────────────────────────────────────────────
 \begin{abstract}
-In today's quick-commerce market, buying groceries online comes with two major everyday frustrations. First, customers who want the best prices or have diverse shopping lists usually have to check multiple stores manually to find who has fresh stock and lower rates. Buying everything from one shop is convenient but often expensive, while splitting orders manually across two or three shops takes too much effort. Second, when people need bulk items or custom requirements---such as twenty-five kilograms of rice for a hostel with a specific budget and deadline---standard grocery apps do not allow them to simply post what they need. Instead, users are forced to search for fixed SKUs with fixed prices, while local merchants have no way to bid or offer competitive rates.
-
-To solve these problems, this project develops and implements \textbf{GroDealz}, a complete web platform built on the MERN stack (MongoDB, Express.js, React 18, Node.js) combined with a Python-based autonomous agent service. GroDealz introduces two main innovations:
-\begin{enumerate}
-    \item \textbf{Autonomous AI Grocery Shopping Agent (Module A):} Users describe their needs in plain English or Hinglish (e.g., \textbf{``Party snacks and beverages for 5 people under ₹600''}). The system extracts the intent, family size, dietary constraints, and budget, queries available local stores (such as FreshMart Central, QuickBazaar, Organic Harvest, and Paona Supermarket), checks real-time stock, and builds an optimal shopping basket. It compares single-store convenience against multi-store splitting, proving real savings (for instance, saving ₹267 on a typical weekly order even after paying separate delivery fees), and provides a visual store journey audit.
-    \item \textbf{Reverse RFQ Marketplace and Merchant Quotation Engine (Module B):} Customers post shopping requests in natural language. The system extracts items, quantities, target budgets, and delivery deadlines. Nearby store owners can see open requests, verify their stock, and submit transparent, itemized line-item quotations. The quotation engine dynamically ranks competing offers according to the buyer's choice: lowest total price, fastest delivery, highest store rating, or a balanced score. Buyers can also send counter-offers, and merchants can revise their quotes. Once accepted, the system converts the quote directly into a placed order.
-\end{enumerate}
-
-In addition, GroDealz features a hybrid product recommendation engine (combining collaborative filtering, content features, and time-of-day scoring), an hourly demand forecasting cron job, real-time status updates via Socket.IO, and an AI-assisted customer support desk with automatic intent tagging and PII masking. The platform has been tested thoroughly with automated test suites and deployed on Render with a live database.
+Rapid expansion in online grocery commerce has exposed critical inefficiencies in conventional single-store platforms, where consumers cannot easily optimize baskets across competing merchants or negotiate bulk custom orders. This project presents \textbf{GroDealz}, an intelligent multi-store grocery basket optimizer and merchant quotation platform built on the MERN stack (MongoDB, Express.js, React 18, Node.js) and a Python LangGraph autonomous agent service. GroDealz introduces an Autonomous AI Shopping Agent that parses unstructured natural language constraints, queries local store inventories, and computes cost-optimal single-store and multi-store split itineraries with delivery fee audits. In parallel, a Reverse Request for Quotation (RFQ) marketplace empowers buyers to publish custom purchase demands and receive competitive, itemized quotations from nearby independent kirana stores. The system also integrates hybrid product recommendations, demand forecasting, real-time WebSocket communication, and an automated customer support CRM, delivering a unified, scalable digital commerce solution.
 \end{abstract}
 
 \pagebreak
@@ -231,8 +222,6 @@ In addition, GroDealz features a hybrid product recommendation engine (combining
 \vspace{1cm}
 
 First and foremost, I would like to express my deepest gratitude to my project supervisor, \textbf{Dr. Kishorjit Nongmeikapam}, Associate Professor, Department of Computer Science and Engineering, Indian Institute of Information Technology Senapati, Manipur, for his constant encouragement, constructive criticism, and technical guidance throughout the progress of this project. His practical suggestions regarding system architecture, algorithm design, and real-world applicability helped me shape this work into a working software system.
-
-I sincerely thank \textbf{Dr. Navanath Saharia}, Head of the Department of Computer Science and Engineering, for providing departmental facilities, infrastructure, and continuous support for student project work.
 
 I am also thankful to all faculty members and staff of the Department of CSE at IIIT Manipur for their guidance and for creating an inspiring academic environment.
 
