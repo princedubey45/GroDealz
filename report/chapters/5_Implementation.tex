@@ -21,33 +21,64 @@ The implementation utilizes an integrated, multi-service architecture:
 The requirement parser takes arbitrary customer sentences (such as \emph{``I need 25 kg basmati rice for a hostel. My budget is ₹2,500. Delivery within two days.''}) and extracts structured parameters using regular expressions and semantic fallback dictionaries:
 
 \begin{itemize}
-    \item \textbf{Budget Extraction:} Strips currency symbols (₹, Rs, INR) and comma digit separators, matching numerical patterns adjacent to budget keywords:
-\begin{lstlisting}[language=JavaScript, basicstyle=\footnotesize\ttfamily]
-const normalizedQuery = query.replace(/(\d),(\d)/g, '$1$2');
-const budgetMatch = normalizedQuery.match(
-  /(?:budget\s*(?:is|of)?\s*[:=]?\s*|under\s*|upto\s*)(?:rs\.?|inr|)?\s*(\d{2,7})/i
-);
-if (budgetMatch) {
-  result.budget = parseInt(budgetMatch[1].replace(/,/g, ''), 10);
-}
-\end{lstlisting}
+    \item \textbf{Budget Extraction:} Strips currency symbols (₹, Rs, INR) and comma digit separators, matching numerical patterns adjacent to budget keywords (e.g., \emph{``budget is ₹2,500''}, \emph{``under ₹600''}).
     \item \textbf{Delivery Deadline Extraction:} Scans for day counts (e.g., \emph{``within 2 days''}, \emph{``in 3 days''}) or relative terms (such as \emph{``tomorrow''} or \emph{``urgent''}) and computes the future \texttt{Date} timestamp.
     \item \textbf{Commodity and Quantity Extraction:} Matches patterns pairing numbers with measurement units (kg, g, L, packs, pcs) and product names (such as \emph{``25 kg basmati rice''} or \emph{``2 litre mustard oil''}).
 \end{itemize}
 
+Algorithm~\ref{alg:rfq_parser} specifies the complete multi-pattern entity extraction and normalization pipeline:
+
+\begin{algorithm}[H]
+\caption{Natural Language Shopping Requirement Parser (\texttt{rfqParser.js})}
+\label{alg:rfq_parser}
+\begin{algorithmic}[1]
+\Require Raw natural language prompt $Q$, Current system timestamp $t_{\text{now}}$
+\Ensure Structured requirement object $R = \langle B, t_{\text{deadline}}, I \rangle$
+\State $Q_{\text{clean}} \gets \textsc{NormalizeCommasAndWhitespace}(Q)$
+\State $B \gets \textsc{ExtractBudgetPattern}(Q_{\text{clean}})$ \Comment{Regex matching for budget keywords and currency}
+\State $t_{\text{deadline}} \gets \textsc{ExtractDeadline}(Q_{\text{clean}}, t_{\text{now}})$ \Comment{Computes future delivery date}
+\State $I \gets \emptyset$
+\For{each commodity match $m$ in $\textsc{TokenizeCommodityPatterns}(Q_{\text{clean}})$}
+    \State $(q, u) \gets \textsc{ExtractQuantityAndUnit}(m)$ \Comment{e.g., $25\text{ kg}$, $2\text{ litre}$}
+    \State $p \gets \textsc{ExtractProductName}(m)$ \Comment{e.g., ``basmati rice''}
+    \State $I \gets I \cup \{\langle \text{name}: p, \text{quantity}: q, \text{unit}: u \rangle\}$
+\EndFor
+\State \Return $R \gets \langle \text{budget}: B, \text{deadline}: t_{\text{deadline}}, \text{items}: I \rangle$
+\end{algorithmic}
+\end{algorithm}
+
 \subsection{Merchant Quotation Engine (\texttt{quotationEngine.js})}
-The quotation engine implements four primary operations:
-\begin{enumerate}
-    \item \textbf{Line-Item Validation and Calculation (\texttt{validateAndCalculateQuote}):} Ensures every quoted item has a non-negative unit price and valid quantity, calculating exact line totals, subtotal, and grand total:
-\begin{lstlisting}[language=JavaScript, basicstyle=\footnotesize\ttfamily]
-const lineTotal = Math.round(qty * unitPrice * 100) / 100;
-const itemsSubtotal = calculatedItems.reduce((acc, it) => acc + it.lineTotal, 0);
-const grandTotal = itemsSubtotal + deliveryCharge + tax;
-\end{lstlisting}
-    \item \textbf{Dynamic Multi-Criteria Ranking (\texttt{rankQuotations}):} Computes ranking scores according to the customer's selected priority (\texttt{lowest\_price}, \texttt{fastest\_delivery}, \texttt{highest\_rated}, or \texttt{balanced}), assigning intuitive badges to top-ranking bids.
-    \item \textbf{Counter-Offer and Revision Handlers:} Manages negotiation state. When a customer counters, the quote is flagged as \texttt{customer\_countered}. When a merchant revises, the previous version is archived in \texttt{revisionHistory} and new totals are calculated.
-    \item \textbf{Atomic Conversion to Order (\texttt{acceptQuotationAndCreateOrder}):} Verifies quote expiration, marks the selected quote as \texttt{accepted}, rejects competing bids, creates a confirmed \texttt{Order} document, and links the order ID to the original \texttt{BuyerRequest}.
-\end{enumerate}
+The quotation engine governs quotation validation, multi-criteria dynamic ranking, negotiation state management, and atomic conversion to confirmed orders. Algorithm~\ref{alg:quotation_ranking} formalizes the line-item validation and scoring procedure:
+
+\begin{algorithm}[H]
+\caption{Itemized Quotation Validation and Multi-Criteria Dynamic Ranking}
+\label{alg:quotation_ranking}
+\begin{algorithmic}[1]
+\Require Quoted line items $L$, delivery fee $F$, tax rate $\tau$, customer priority $M$, target budget $B_{\text{target}}$
+\Ensure Validated quotation record $Q$ with dynamic ranking score $S$
+\State $\text{subtotal} \gets 0$
+\For{each line item $i \in L$}
+    \State $\text{lineTotal}_i \gets \text{round}(\text{qty}_i \times \text{unitPrice}_i, 2)$
+    \State $\text{subtotal} \gets \text{subtotal} + \text{lineTotal}_i$
+\EndFor
+\State $\text{grandTotal} \gets \text{round}(\text{subtotal} + F + (\text{subtotal} \times \tau), 2)$
+\If{$M = \text{\texttt{lowest\_price}}$}
+    \State $S \gets 1{,}000{,}000 - \text{grandTotal}$
+\ElsIf{$M = \text{\texttt{fastest\_delivery}}$}
+    \State $S \gets T_{\text{future}} - t_{\text{delivery}}$
+\ElsIf{$M = \text{\texttt{highest\_rated}}$}
+    \State $S \gets (\text{Rating} \times 1{,}000) + \min(\text{ReviewCount}, 100)$
+\ElsIf{$M = \text{\texttt{balanced}}$}
+    \State $S_{\text{price}} \gets 50 \times \left(1 - \frac{\text{grandTotal} - P_{\min}}{P_{\max} - P_{\min}}\right)$
+    \State $S_{\text{speed}} \gets 30 \times \left(1 - \frac{t_{\text{delivery}} - t_{\text{earliest}}}{t_{\text{latest}} - t_{\text{earliest}}}\right)$
+    \State $S_{\text{rating}} \gets 20 \times \left(\frac{\text{Rating}}{5.0}\right)$
+    \State $S \gets S_{\text{price}} + S_{\text{speed}} + S_{\text{rating}} + (\text{grandTotal} \le B_{\text{target}} \ ? \ 5 : 0)$
+\EndIf
+\State \Return $Q \gets \langle \text{lineItems}: L, \text{grandTotal}: \text{grandTotal}, \text{score}: S \rangle$
+\end{algorithmic}
+\end{algorithm}
+
+The quotation engine also manages negotiation state. When a customer counters, the quote status updates to \texttt{customer\_countered}. When a merchant revises, the previous version is archived in \texttt{revisionHistory} and new totals are calculated. Once accepted, the quotation is converted into an active order.
 
 \subsection{Hybrid Recommendation Subsystem}
 The recommendation service in \texttt{backend/routes/recommendations.js} calculates scores using a three-tier model:
@@ -92,21 +123,30 @@ Presents the full grocery catalog with category pills, live search, freshness ba
 The autonomous shopping assistant is implemented in the Python microservice (\texttt{ai-agent/app/graph.py}) using LangGraph. Unlike rigid conversational scripts, the agent maintains an explicit, typed state graph throughout its multi-step execution.
 
 \subsection{State Schema Specification (\texttt{AgentState})}
-The workflow state is defined as a typed dictionary passing data between nodes:
-\begin{lstlisting}[language=Python, basicstyle=\footnotesize\ttfamily]
-class AgentState(TypedDict):
-    raw_query: str                          # User natural language input
-    requirements: Optional[Dict[str, Any]]  # Extracted parameters
-    raw_candidates: List[Dict[str, Any]]    # Items discovered across stores
-    normalized_candidates: List[Dict[str, Any]] # Standardized units & prices
-    optimized_strategies: Dict[str, Any]    # Single vs Multi store metrics
-    proposal: Dict[str, Any]                # Audited picking itinerary
-    status: str                             # Lifecycle stage indicator
-    errors: List[str]                       # Resilience error log
-\end{lstlisting}
+The workflow state is defined as an immutable data contract passing typed state channels between decision nodes, as detailed in Table~\ref{tab:agent_state}.
+
+\begin{table}[H]
+\centering
+\caption{Specification of LangGraph Workflow State Channels (\texttt{AgentState})}
+\label{tab:agent_state}
+\begin{tabular}{>{\raggedright\arraybackslash}p{4.3cm} >{\raggedright\arraybackslash}p{2.1cm} >{\raggedright\arraybackslash}p{7.6cm}}
+\toprule
+\textbf{State Channel} & \textbf{Data Type} & \textbf{Operational Function} \\
+\midrule
+\texttt{raw\_query} & \texttt{str} & Unprocessed natural language prompt entered by user \\
+\texttt{requirements} & \texttt{Dict[str, Any]} & Validated parameters ($N$, $D$, target budget, dietary tags) \\
+\texttt{raw\_candidates} & \texttt{List[Dict]} & Candidate product records retrieved across store adapters \\
+\texttt{normalized\_candidates} & \texttt{List[Dict]} & Items with unified metric units and price-per-quantity \\
+\texttt{optimized\_strategies} & \texttt{Dict[str, Any]} & Single-store baseline vs.\ multi-store split cost metrics \\
+\texttt{proposal} & \texttt{Dict[str, Any]} & Audited picking itinerary, savings proof, and store route \\
+\texttt{status} & \texttt{str} & Lifecycle state indicator (\texttt{extracted}, \texttt{optimized}, etc.) \\
+\texttt{errors} & \texttt{List[str]} & Fault-tolerance error log for graceful fallback execution \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Graph Node Pipeline and Execution Flow}
-The decision graph executes seven sequential operational nodes:
+The decision graph executes six sequential operational nodes:
 \begin{enumerate}
     \item \textbf{\texttt{extract\_requirements\_node}:} Invokes an LLM prompt with strict Pydantic output parsing (\texttt{ShoppingRequirements}) to extract household size, planning duration, target budget, and item lists.
     \item \textbf{\texttt{validate\_requirements\_node}:} Performs sanity validation. If the customer submits an open-ended goal (e.g., \emph{``Groceries for 3 days''}) without specific items, it dynamically injects baseline staples (vegetables, rice, milk, dal, bread) scaled by family size.
@@ -116,43 +156,60 @@ The decision graph executes seven sequential operational nodes:
     \item \textbf{\texttt{generate\_proposal\_node}:} Assembles the final structured response containing the Store Journey Audit, itemized picking breakdown per vendor, and proof of net savings ($\Delta_{\text{savings}}$).
 \end{enumerate}
 
-The graph edges are configured using LangGraph's \texttt{StateGraph}:
-\begin{lstlisting}[language=Python, basicstyle=\footnotesize\ttfamily]
-workflow = StateGraph(AgentState)
-workflow.add_node("extract", extract_requirements_node)
-workflow.add_node("validate", validate_requirements_node)
-workflow.add_node("search", multi_store_search_node)
-workflow.add_node("normalize", normalize_items_node)
-workflow.add_node("optimize", optimize_basket_node)
-workflow.add_node("propose", generate_proposal_node)
+Algorithm~\ref{alg:langgraph_pipeline} defines the end-to-end execution loop of the compiled LangGraph workflow:
 
-workflow.set_entry_point("extract")
-workflow.add_edge("extract", "validate")
-workflow.add_edge("validate", "search")
-workflow.add_edge("search", "normalize")
-workflow.add_edge("normalize", "optimize")
-workflow.add_edge("optimize", "propose")
-workflow.add_edge("propose", END)
-compiled_agent = workflow.compile()
-\end{lstlisting}
+\begin{algorithm}[H]
+\caption{Autonomous Multi-Store LangGraph Decision Pipeline}
+\label{alg:langgraph_pipeline}
+\begin{algorithmic}[1]
+\Require User natural language shopping goal $Q_{\text{user}}$, Registered store adapters $\mathcal{S}$
+\Ensure Audited multi-store picking itinerary $\mathcal{P}$ with net savings proof $\Delta_{\text{savings}}$
+\State $\text{state}.\text{requirements} \gets \textsc{ExtractRequirements}(Q_{\text{user}})$ \Comment{Node 1: LLM Pydantic parser}
+\State $\text{state}.\text{requirements} \gets \textsc{ValidateAndEnrich}(\text{state}.\text{requirements})$ \Comment{Node 2: Default staple fallback}
+\State $\mathcal{C} \gets \emptyset$
+\For{each required item $it \in \text{state}.\text{requirements}.\text{items}$} \Comment{Node 3: Parallel store discovery}
+    \State $\text{candidates} \gets \textsc{ParallelSearchAcrossStores}(\mathcal{S}, it.\text{name}, it.\text{category})$
+    \State $\mathcal{C} \gets \mathcal{C} \cup \text{candidates}$
+\EndFor
+\State $\mathcal{C}_{\text{norm}} \gets \textsc{NormalizeUnitsAndPrices}(\mathcal{C})$ \Comment{Node 4: Metric standardization}
+\State $C_{\text{single}} \gets \min_{s \in \mathcal{S}} \left( \sum_{i} P_{s, i} + F_s \right)$ \Comment{Node 5: Single-store baseline}
+\State $C_{\text{multi}} \gets \sum_{s \in \mathcal{S}_{\text{visited}}} \left( \sum_{i \in I_s} \min_{s'} P_{s', i} + F_s \right)$ \Comment{Multi-store partition}
+\State $\Delta_{\text{savings}} \gets C_{\text{single}} - C_{\text{multi}}$
+\State $\mathcal{P} \gets \textsc{CompileStoreJourneyAudit}(\mathcal{C}_{\text{norm}}, C_{\text{single}}, C_{\text{multi}}, \Delta_{\text{savings}})$ \Comment{Node 6: Visual itinerary}
+\State \Return $\mathcal{P}$
+\end{algorithmic}
+\end{algorithm}
 
 \section{Transaction Management and Atomic Quotation Acceptance}
 
-To prevent race conditions during reverse RFQ negotiations, \texttt{acceptQuotationAndCreateOrder} in \texttt{backend/services/quotationEngine.js} executes an atomic multi-document state transition:
+To prevent race conditions during reverse RFQ negotiations, Algorithm~\ref{alg:atomic_acceptance} details the atomic multi-document state transition implemented in \texttt{backend/services/quotationEngine.js}:
 
-\begin{enumerate}
-    \item \textbf{Expiration and Status Verification:} Verifies that the quotation has not passed its expiration timestamp (\texttt{Date.now() <= quote.expiresAt}) and that the parent request remains in an actionable state (\texttt{open} or \texttt{quotes\_received}).
-    \item \textbf{Atomic Status Mutation:} Transitions the accepted quotation status to \texttt{accepted}. Concurrently, all other quotations linked to the same \texttt{requestId} are updated to \texttt{rejected}:
-\begin{lstlisting}[language=JavaScript, basicstyle=\footnotesize\ttfamily]
-await MerchantQuotation.updateMany(
-  { request: requestId, _id: { $ne: quotationId } },
-  { $set: { status: 'rejected' } }
-);
-\end{lstlisting}
-    \item \textbf{Order Document Generation:} Instantiates a confirmed \texttt{Order} document containing an immutable snapshot of all quoted line items, agreed unit prices, delivery fee, tax, merchant store ID, and buyer customer ID.
-    \item \textbf{Parent Request Linking:} Updates \texttt{BuyerRequest} status to \texttt{accepted} and records the generated \texttt{orderId} in \texttt{convertedOrderId}.
-    \item \textbf{Real-Time Event Dispatch:} Dispatches WebSocket notifications to both the customer room and the winning merchant, alerting them that the transaction has been finalized.
-\end{enumerate}
+\begin{algorithm}[H]
+\caption{Atomic Concurrency-Controlled Quotation Acceptance}
+\label{alg:atomic_acceptance}
+\begin{algorithmic}[1]
+\Require Request ID $id_{\text{req}}$, Selected Quotation ID $id_{\text{quote}}$, Customer ID $id_{\text{cust}}$
+\Ensure Confirmed Order record $O$, Real-time WebSocket event dispatch
+\State $Q \gets \textsc{FindQuotationById}(id_{\text{quote}})$
+\If{$Q = \text{null}$ \textbf{or} $t_{\text{now}} > Q.\text{expiresAt}$ \textbf{or} $Q.\text{status} \ne \text{\texttt{'open'}}$}
+    \State \textbf{throw} \text{Error(``Quotation is expired or no longer actionable'')}
+\EndIf
+\State $R \gets \textsc{FindBuyerRequestById}(id_{\text{req}})$
+\If{$R.\text{status} = \text{\texttt{'accepted'}}$}
+    \State \textbf{throw} \text{Error(``Request already converted into an active order'')}
+\EndIf
+\State \textbf{begin atomic transaction}
+\State $Q.\text{status} \gets \text{\texttt{'accepted'}}$
+\State $\textsc{RejectOtherQuotations}(id_{\text{req}}, id_{\text{quote}})$ \Comment{Set status to \texttt{'rejected'} for competing bids}
+\State $O \gets \textsc{CreateOrderDocument}(id_{\text{cust}}, Q.\text{store}, Q.\text{lineItems}, Q.\text{grandTotal})$
+\State $R.\text{status} \gets \text{\texttt{'accepted'}}$
+\State $R.\text{convertedOrderId} \gets O.\text{\_id}$
+\State \textbf{commit transaction}
+\State $\textsc{EmitSocketEvent}(\texttt{rfq\_} + id_{\text{req}}, \text{\texttt{'quote\_update'}}, Q)$
+\State $\textsc{EmitSocketEvent}(\texttt{order\_} + O.\text{\_id}, \text{\texttt{'order\_status\_change'}}, O)$
+\State \Return $O$
+\end{algorithmic}
+\end{algorithm}
 
 \section{Real-Time WebSocket Event Multiplexing}
 
@@ -171,14 +228,25 @@ Security and privacy controls are enforced across all layers of the GroDealz app
 \begin{enumerate}
     \item \textbf{Cryptographic Authentication Middleware (\texttt{auth.js}):} Every protected route intercepts the HTTP \texttt{Authorization} header, extracts the Bearer JWT token, verifies its cryptographic signature using HMAC-SHA256, and attaches the decoded user payload to Express \texttt{req.user}. Requests with expired or tampered tokens are rejected with HTTP 401 Unauthorized.
     \item \textbf{Credential Protection:} User passwords are encrypted prior to database insertion using \texttt{bcryptjs} with 10 salt rounds. Plaintext passwords are never logged or stored.
-    \item \textbf{Automated PII Sanitization Pipeline:} In the Customer Support CRM (\texttt{backend/routes/support.js}), when a buyer submits a support ticket, the optional PII masking toggle triggers regex scrubbing that sanitizes phone numbers and email addresses before persistence:
-\begin{lstlisting}[language=JavaScript, basicstyle=\footnotesize\ttfamily]
-function maskPII(text) {
-  if (!text) return '';
-  return text
-    .replace(/(?:\+91[\-\s]?)?[6-9]\d{9}/g, '[PHONE_REDACTED]')
-    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL_REDACTED]');
-}
-\end{lstlisting}
-    This protects customer privacy while allowing the NLP intent classifier to accurately categorize the dispute (e.g., delivery delay, missing item, payment inquiry).
+    \item \textbf{Automated PII Sanitization Pipeline:} In the Customer Support CRM (\texttt{backend/routes/support.js}), Algorithm~\ref{alg:pii_masking} scrubs sensitive customer contact information and delivery landmarks before intent classification:
 \end{enumerate}
+
+\begin{algorithm}[H]
+\caption{Automated Sensitive PII Masking and Ticket Triage (\texttt{support.js})}
+\label{alg:pii_masking}
+\begin{algorithmic}[1]
+\Require Support ticket text $T$, Masking toggle flag $F_{\text{mask}}$
+\Ensure Sanitized ticket text $T_{\text{clean}}$, Predicted Intent category $C$, Confidence score $\sigma$
+\If{$F_{\text{mask}} = \text{\textbf{true}}$}
+    \State $\text{pat}_{\text{phone}} \gets \text{\texttt{/(+91)?[6-9]\textbackslash d\{9\}/}}$ \Comment{Regex matching 10-digit mobile numbers}
+    \State $\text{pat}_{\text{email}} \gets \text{\texttt{/[a-zA-Z0-9.\_\%+-]+@[a-zA-Z0-9.-]+\textbackslash.[a-zA-Z]\{2,\}/}}$
+    \State $T_{\text{clean}} \gets \textsc{RegexReplace}(T, \text{pat}_{\text{phone}}, \text{\texttt{'[PHONE\_REDACTED]'}})$
+    \State $T_{\text{clean}} \gets \textsc{RegexReplace}(T_{\text{clean}}, \text{pat}_{\text{email}}, \text{\texttt{'[EMAIL\_REDACTED]'}})$
+\Else
+    \State $T_{\text{clean}} \gets T$
+\EndIf
+\State $\langle C, \sigma \rangle \gets \textsc{ClassifyIntentWithNLP}(T_{\text{clean}})$ \Comment{Identifies issue: delivery, item, payment}
+\State \Return $\langle T_{\text{clean}}, C, \sigma \rangle$
+\end{algorithmic}
+\end{algorithm}
+
